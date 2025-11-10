@@ -10,7 +10,27 @@ class Player():
         self.ine = ine
         self.id = None 
 
-    def save_new_joueur(self):
+    def get_all_players():
+        players_list = []
+        directory = "data"
+        file_path = os.path.join(directory, "players_infos.json")
+
+        try : 
+            with open (file_path , "r") as file:
+                    all_players = json.load(file)
+
+            for players in all_players:
+                full_name = players['name'] + ' '  + players['surname']
+                players_list.append(full_name)
+
+            print(f"Player List : {players_list}")
+            return players_list
+
+        except:
+            print("Player list empty")
+            return players_list
+        
+    def save_new_player(self):
         directory = "data"
         file_path = os.path.join(directory, "players_infos.json")
 
@@ -39,34 +59,3 @@ class Player():
         #Modify the json files
         with open(file_path, "w") as file:
             json.dump(all_players, file, indent=2)
-
-        print(f"user : {self.name} {self.surname} registred with sucess")
-
-
-class Tournament():
-    def __init__(self, name, city, date, tournament_tour_number, actual_tour, tour_list, registred_player, description):
-        self.name = name
-        self.city = city
-        self.date = date
-        self.tournament_tour_number = tournament_tour_number
-        self.actual_tour = actual_tour
-        self.tour_list = tour_list
-        self.registred_player = registred_player
-        self.description = description
-        pass
-
-class Database():
-    def __init__():
-        pass
-
-class Tours():
-    def __init__():
-        pass
-
-class Match():
-    def __init__():
-        pass
-
-#test creer new joueur :
-newplayer = Player("jean","bernard","a","a")
-newplayer.save_new_joueur()
