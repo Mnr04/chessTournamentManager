@@ -16,6 +16,7 @@ class View:
     
     def display_players_menu(self):
         print(" [A] Add Players ➕")
+        print(" [G] Players List 👥")
         print(" [R] Return ⬅️")
         reponse = input("Your choice: ")
         return reponse

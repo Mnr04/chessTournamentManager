@@ -23,7 +23,6 @@ class Player():
                 full_name = players['name'] + ' '  + players['surname']
                 players_list.append(full_name)
 
-            print(f"Player List : {players_list}")
             return players_list
 
         except:

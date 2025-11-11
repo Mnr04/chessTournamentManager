@@ -10,21 +10,36 @@ class Controller:
             self.view.welcome_message()
             response = self.view.display_menu()
 
-            if response == "A":
-                self.players_menu()
+            menu_choice = {
+                "A": self.players_menu
+            }
+        
+            if response in menu_choice:
+                user_choice = menu_choice[response]
+                user_choice()
                 
-            elif response == "D":
+            elif response == "Q":
                  self.view.finish_message()
                  break
             
     def players_menu(self):
         response_display_players_menu = self.view.display_players_menu()
-        if response_display_players_menu == "A":
-            new_player = self.create_new_player()
-        if response_display_players_menu == "R":
-            self.view.display_menu()
-        return new_player
-            
+        menu_choice = {
+            "A": self.create_new_player,
+            "G": self.get_players_list,
+            "R": self.view.display_menu
+        }
+        
+        user_choice = menu_choice[response_display_players_menu]
+        user_choice()
+
+       
+    
+    def get_players_list(self):
+        players_list = Player.get_all_players()
+        for player in players_list:
+            print(player)
+
 
     def create_new_player(self):
         player_data = self.view.get_new_player_inputs()
