@@ -1,17 +1,21 @@
 from tabulate import tabulate
 
-class Main_view:
+class MainView:
     #Message 
-    def welcome_message(self):
+    @staticmethod
+    def welcome_message():
         print("--- Welcome in Chess Manager ---")
     
-    def finish_message(self):
+    @staticmethod
+    def finish_message():
         print("--- See you next time ---")
 
-    def error(self, message):
+    @staticmethod
+    def error(message):
         print(message)
 
-    def success(self, message):
+    @staticmethod
+    def success(message):
         print(message)
     
     # Main Menu
@@ -24,9 +28,10 @@ class Main_view:
         reponse = input("Your choice: ")
         return reponse
     
-class Players_view():
-    def display_players_sub_menu(self):
-        print("\Players Menu:")
+class PlayersView():
+    @staticmethod
+    def display_players_sub_menu():
+        print("\nPlayers Menu:")
         print(" [1] Create Player 👤")
         print(" [2] Update Player 🏆")
         print(" [3] View Player")
@@ -37,7 +42,8 @@ class Players_view():
         return reponse
     
     #Create Player
-    def get_new_player_inputs(self):
+    @staticmethod
+    def get_new_player_inputs():
         print("\n--- Add a new player ---")
         
         name = input("Last Name: ")
@@ -48,12 +54,14 @@ class Players_view():
         return {"name": name, "surname": surname, "age": age, "ine": ine}
     
     #Update Player
-    def get_id_view(self):
+    @staticmethod
+    def get_id_view():
         print("\n--- Choose player ---")
         player_id = input("Player id: " )
         return player_id
     
-    def update_player_inputs(self, player):
+    @staticmethod
+    def update_player_inputs(player):
         print(f"\n--- Update Player {player['name']} {player['surname']} ---") 
         
         name = input(f"Last Name ({player['surname']}): ") or player['surname']
@@ -64,8 +72,8 @@ class Players_view():
         return {"name": name, "surname": surname, "age": age, "ine": ine}
     
     #View Player
-    @classmethod
-    def display_player_info(cls, player_info):
+    @staticmethod
+    def display_player_info(player_info):
         print(f"Id : {player_info['id']}")
         print(f"Name : {player_info['name']}")
         print(f"Surname : {player_info['surname']}")
@@ -74,9 +82,10 @@ class Players_view():
         
         response = input("Press any button to return")
         return response
-    @classmethod
+
     #View all Players
-    def display_all_players(cls, all_players):
+    @staticmethod
+    def display_all_players(all_players):
         print(tabulate(all_players, headers="keys"))
         
         input("Press any button to return")
@@ -85,28 +94,37 @@ class Players_view():
     def display_delete_view(cls, player_id):
         print(f"Player {player_id} succesfuly delete")
         input("Press any button to return")
-""" 
+
+class TournamentView():
     # Tournament Menu
-    def display_tournaments_menu(self):
-        print(" [A] New Tournaments ➕")
-        print(" [M] Manage Tournaments 🛠️")
-        print(" [R] Return ⬅️")
+    @staticmethod
+    def display_tournaments_sub_menu():
+        print(" [1] Create Tournaments ➕")
+        print(" [2] Start Tournament ➕")
+        print(" [3] Update Tournaments 🛠️")
+        print(" [4] view Tournament ➕")
+        print(" [5] view all Tournaments ➕")
+        print(" [6] Remove Tournaments 🛠️")
+        print(" [7] Return ⬅️")
         reponse = input("Your choice: ")
+        
         return reponse
     
-    def get_new_tournament_inputs(self):
+    @staticmethod
+    def get_new_tournament_inputs():
     
         print("\n--- Create a new tournament ---")
         
         name = input("Tournament Name: ")
         city = input("City: ")
-        print("start Date : ")
-        year = input('Enter a year [yyyy]: ')
-        month = input('Enter a month [mm]: ')
-        day = input('Enter a day [d]: ')
         Total_tour_number = input("Total tour number:  (default = 4)")
         Description = input("description: ")
+        numbers_of_players = input("How many players in this Tournament ? : ")
 
-        return {"name": name, "city": city, "year":year, "month":month, "day":day, "Total_tour_number":Total_tour_number, "Description":Description}
+        return {"name": name, "city": city, "Total_tour_number":Total_tour_number, "Description":Description}, numbers_of_players
 
-"""
+    @staticmethod
+    def get_players_list():
+        print("\n--- Enter id of player you want to registred ---")
+        id = input("id: ")
+        return id

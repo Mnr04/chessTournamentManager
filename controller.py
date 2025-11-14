@@ -1,11 +1,12 @@
-from view import Main_view, Players_view
+from view import MainView, PlayersView, TournamentView
 from models import Player, Tournament
 import datetime
 
-class Main_controller:
+class MainController:
     def __init__(self):
-        self.view = Main_view()
-        self.players_controller = Players_controller()
+        self.view = MainView()
+        self.players_controller = PlayersController()
+        self.tournaments_controller = TournamentController()
   
     def run(self):
         while True:
@@ -14,7 +15,7 @@ class Main_controller:
 
             menu_choice = {
                 "1": self.players_controller.players_sub_menu,
-                "2": "",
+                "2": self.tournaments_controller.tournament_sub_menu,
                 "3": "",
             }
         
@@ -29,10 +30,10 @@ class Main_controller:
             else :
                 self.view.error("Error : Wrong input")
 
-class Players_controller():
+class PlayersController():
     def __init__(self):
-        self.players_view = Players_view()
-        self.main_view = Main_view()
+        self.players_view = PlayersView()
+        self.main_view = MainView()
 
     # Sub_Menu
     def players_sub_menu(self):
@@ -143,8 +144,76 @@ class Players_controller():
         Player.delete_player(player_id)
         self.players_view.display_delete_view(player_id)
 
+class TournamentController():
+    def tournament_sub_menu(self):
+        while True:
+            response = TournamentView.display_tournaments_sub_menu()
+            menu_choice = {
+                "1": self.create_new_tournament,
+                "2": self.create_new_tournament,
+                "3": self.create_new_tournament,
+                "4": self.create_new_tournament,
+                "5": self.create_new_tournament,
+                "6": self.create_new_tournament
+            }
+        
+            if response in menu_choice:
+                user_choice = menu_choice[response]
+                user_choice()
+                
+            elif response == "7":
+                 break
+            
+            else :
+                MainView.error("Error : Wrong input")
+
+    def create_new_tournament(self):
+        tournament_data, str_numbers_of_players = TournamentView.get_new_tournament_inputs()
+
+        name = tournament_data["name"]
+        city = tournament_data["city"]
+        total_tour_number = tournament_data["Total_tour_number"]
+        description = tournament_data["Description"]
+        player_list = ""
+
+        if not name or not city :
+            MainView.error("Name or city cannot be empty.")
+            return 
+        try : 
+            total_tour_number = int(total_tour_number) 
+        except:
+            total_tour_number = 4
+
+        try:
+            #Logic to get numbers of players and send view to get Id, name and surname of players
+            numbers_of_players = int(str_numbers_of_players)
+            player_list = self.get_players_list(numbers_of_players)
+            new_tournament = Tournament(name, city, total_tour_number,player_list, description)
+            new_tournament.save_tournament()
+        
+            MainView.success(f"Tournament {name} saved successfully!")
+            
+        except Exception as e:
+            MainView.error(f"Error while saving the tournament: {e}")
 
 
+    def get_players_list(self, numbers_of_players):
+        player_list = []
+        for i in range(numbers_of_players):
+            while True:
+                print(f"\n--- Registration Player {i + 1} / {numbers_of_players} ---")
+                
+                id = TournamentView.get_players_list()
+                target_player = Player.get_players_by_id(id)
+
+                if target_player:
+                    player_list.append([target_player["surname"], target_player["name"], target_player["id"]])
+                    MainView.success(f"Player {target_player['surname']} added!")
+                    break 
+                else:
+                    MainView.error(f"Player with ID {id} not found. Please try again.")
+
+        return player_list
 
 
 
@@ -156,8 +225,6 @@ class Players_controller():
 
 
 """ 
-
-
     # Tournament Option
   
     def all_tournament_list(self):
@@ -175,46 +242,5 @@ class Players_controller():
             "R": self.view.display_menu,
             "M": self.all_tournament_list
         }
-        
-    def create_new_tournament(self):
-        tournament_data = self.view.get_new_tournament_inputs()
-
-        name = tournament_data["name"]
-        city = tournament_data["city"]
-        year = tournament_data["year"]
-        month = tournament_data["month"]
-        day = tournament_data["day"]
-        total_tour_number = tournament_data["Total_tour_number"]
-        description = tournament_data["Description"]
-        player_list = Player.get_all_players()
-
-        try :
-            year = int(year)
-            month = int(month)
-            day = int(day)
-            date = datetime.date(year, month, day)
-            date = date.isoformat()
-            print(date)
-        except:
-            self.view.error("Date format invalid")
-            return 
-
-        if not name or not city or not date:
-            self.view.error("Name, city, or start date cannot be empty.")
-            return 
-        try : 
-            total_tour_number = int(total_tour_number) 
-        except:
-            total_tour_number = 4
-
-        try:
-            new_tournament = Tournament(name, city, date, total_tour_number,player_list, description)
-            new_tournament.create_tournament()
-        
-            self.view.success(f"Tournament {name} saved successfully!")
-            
-        except Exception as e:
-            self.view.error(f"Error while saving the tournament: {e}")
-       
-           
+              
 """

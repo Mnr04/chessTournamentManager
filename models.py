@@ -3,6 +3,7 @@ import uuid
 import os
 
 class Player():
+
     def __init__(self, surname, name, age, ine):
         self.surname = surname
         self.name = name
@@ -43,7 +44,6 @@ class Player():
            with open(file_path, "w") as file:
                 json.dump(all_players, file, indent=2)
     
-
     def save_new_player(self):
         file_path = os.path.join('data', "players_infos.json")
 
@@ -81,32 +81,42 @@ class Player():
             json.dump(all_players, file, indent=2)
 
 class Tournament():
-    def __init__(self, name, city, date, tournament_tour_number, registred_player, description):
+    def __init__(self, name, city, total_round, players, description):
+        # statemapping(0:"not_start", 1="in_progress", 2="finish")
+        self.state = 0
         self.name = name
         self.city = city
-        self.date = date
-        self.tournament_tour_number = tournament_tour_number
-        self.registred_player = registred_player
+        self.start = "Not Start"
+        self.end = "Not Finish"
+        self.actual_round = 0
+        self.total_round = total_round
+        self.players = players
         self.description = description
         pass
 
-    def create_tournament(self):
+    def tournament_to_dict(self):
         tournois_info = {
             "Name" : self.name,
             "City" : self.city,
-            "Date": self.date,
-            "Total_tour_number": self.tournament_tour_number,
-            "Players": self.registred_player,
+            "Total_round": self.total_round,
+            "Players": self.players,
             "Description": self.description
         }
+        return tournois_info
+        
+
+    def save_tournament(self):
+        #on recupere les donné 
+        tournament_data = self.tournament_to_dict()
+
         directory = "data"
-        tournament_name = self.name
-        file_path = os.path.join(directory, "tournament", tournament_name, "info.json")
+        file_path = os.path.join(directory, "tournament", self.name, "info.json")
         directory_to_create = os.path.dirname(file_path)
         os.makedirs(directory_to_create, exist_ok=True)
 
         with open(file_path, "w") as file:
-            json.dump(tournois_info, file, indent=2)
+            json.dump(tournament_data, file, indent=2)
+
         
     def get_all_tournaments():
         tournaments_list = []
