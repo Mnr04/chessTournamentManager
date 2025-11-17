@@ -1,6 +1,7 @@
 import json
 import shortuuid
 import os
+import shutil
 
 class Player():
 
@@ -173,11 +174,27 @@ class Tournament():
        with open(file_path, "w") as file:
             json.dump(actual_tournement_data, file, indent=2)
 
+    @classmethod
+    def delete_tournament(cls, target_id):
 
+        path = os.path.join('data', "tournament",target_id)
 
+        if os.path.isdir(path):
+            shutil.rmtree(path)
+            return True
+        else :
+            return False
+           
+        
+               
+     
+
+    
 class Round():
     pass
 class Match():
     def __init__(self):
         pass
+
+
 

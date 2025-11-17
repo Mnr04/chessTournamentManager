@@ -152,9 +152,9 @@ class TournamentController():
                 "1": self.create_new_tournament,
                 "2": self.create_new_tournament,
                 "3": self.update_tournament,
-                "4": self.create_new_tournament,
-                "5": self.create_new_tournament,
-                "6": self.create_new_tournament
+                "4": self.view_tournament_info,
+                "5": self.view_all_tournaments,
+                "6": self.remove_tournaments
             }
         
             if response in menu_choice:
@@ -294,9 +294,42 @@ class TournamentController():
                     
         return players_data
 
+    #Access one tournament data
+    def view_tournament_info(self):
+        tournament_id = TournamentView.get_id_view()
+        tournament_info = Tournament.get_tournament_by_id(tournament_id)
 
+        if not tournament_info:
+            MainView.error("Tournament not found!")
+            return
+        
+        player_list = []
 
-            
+        player_list = [
+            {"Name": p[0], "Surname": p[1], "Id": p[2]} 
+            for p in tournament_info["Players"]
+        ]
+
+        tournament_info['Players'] = player_list
+
+        TournamentView.display_tournament_info(tournament_info)
+
+    #Access all tournaments data
+    def view_all_tournaments(self):
+        #On récupère tout les joueurs 
+        all_tournaments = Tournament.get_all_tournement_info()
+        TournamentView.display_all_tournament(all_tournaments)
+
+    #Remove Tournaments
+    def remove_tournaments(self):
+        #recupere player with id
+        tournament_id = TournamentView.get_id_view()
+        #creer option dans le model qui va supprimer ce joueur de la base de données
+        response = Tournament.delete_tournament(tournament_id)
+        if response == False:
+            MainView.error("Tournament not find")
+        else:
+            TournamentView.display_delete_view(tournament_id)     
   
 
 

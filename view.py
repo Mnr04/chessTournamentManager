@@ -86,7 +86,7 @@ class PlayersView():
     #View all Players
     @staticmethod
     def display_all_players(all_players):
-        print(tabulate(all_players, headers="keys"))
+        print(tabulate(all_players, headers="keys", tablefmt="fancy_grid"))
         
         input("Press any button to return")
 
@@ -154,7 +154,6 @@ class TournamentView():
         response = input("Your Choice: ")
         return response
     
-
     def display_numbers_players(action):
         print(f"How many player you want to {action}? ")
         numbers_of_players = input("Your choice ? : ")
@@ -172,3 +171,40 @@ class TournamentView():
         else:
             headers = ["Surname", "Name", "ID"]
             print(tabulate(players_list, headers=headers, tablefmt="simple"))
+
+    @staticmethod
+    def display_tournament_info(tournaments_info):
+        print(f"{'Name':<12} : {tournaments_info['Name']}")
+        print(f"{'City':<12} : {tournaments_info['City']}")
+        print(f"{'Total round':<12} : {tournaments_info['Total_round']}")
+        print(f"they are {len(tournaments_info['Players'])} players Registred")
+        print("Players List: ")
+        for info in tournaments_info['Players']:
+            print(f"Name : {info["Name"]}, Surname : {info["Surname"]},  Id : {info["Id"]}")
+
+        print(f"{'Description':<12} : {tournaments_info.get('Description'), 'N/A'}")
+        
+        response = input("Press any button to return")
+        return response
+    
+    #View all Tournaments
+    @staticmethod
+    def display_all_tournament(all_tournaments):
+        table_data = [
+            {
+                "ID": data.get("id"), 
+                "Name": data.get("Name"), 
+                "City": data.get("City"),
+                "Players": len(data.get("Players")), 
+                "Description": data.get("Description", "")[0:15] 
+            } for data in all_tournaments
+        ]
+            
+        print(tabulate(table_data, headers="keys", tablefmt="fancy_grid")) 
+        
+        input("Press any button to return")
+
+    @staticmethod
+    def display_delete_view(tournament_id):
+        print(f"Tournament {tournament_id} succesfuly delete")
+        input("Press any button to return")
