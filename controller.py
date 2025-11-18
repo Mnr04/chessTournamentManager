@@ -1,5 +1,5 @@
-from view import MainView, PlayersView, TournamentView
-from models import Player, Tournament
+from view import MainView, PlayersView, TournamentView, MatchView
+from models import Player, Tournament, Round
 import datetime
 
 class MainController:
@@ -150,7 +150,7 @@ class TournamentController():
             response = TournamentView.display_tournaments_sub_menu()
             menu_choice = {
                 "1": self.create_new_tournament,
-                "2": self.create_new_tournament,
+                "2": self.start_tournament,
                 "3": self.update_tournament,
                 "4": self.view_tournament_info,
                 "5": self.view_all_tournaments,
@@ -221,10 +221,11 @@ class TournamentController():
         #on recupere un id
         tournament_id = TournamentView.get_id_view()
 
-        #on recupere les info du joueur via son id 
-        tournament_info = Tournament.get_tournament_by_id(tournament_id)
+        #on recupere les info du joueur via son id
+        try :  
+            tournament_info = Tournament.get_tournament_by_id(tournament_id)
 
-        if not tournament_info:
+        except :
             MainView.error("Tournament not found!")
             return
 
@@ -303,8 +304,6 @@ class TournamentController():
             MainView.error("Tournament not found!")
             return
         
-        player_list = []
-
         player_list = [
             {"Name": p[0], "Surname": p[1], "Id": p[2]} 
             for p in tournament_info["Players"]
@@ -331,30 +330,34 @@ class TournamentController():
         else:
             TournamentView.display_delete_view(tournament_id)     
   
+    #Start Tournament
+    def start_tournament(self):
+        tournament_not_start = [t for t in Tournament.get_all_tournement_info() if t['Actual_round'] == "0" ]
+        response = TournamentView.display_start_tournament(tournament_not_start)
+        Tournament.update_tournament_statut(response)
 
-
-
-
-
-
-
-""" 
-    # Tournament Option
-  
-    def all_tournament_list(self):
-        tournament_list = Tournament.get_all_tournaments()
-        value = self.view.display_tournament_list(tournament_list)
+        player_list = Round.create_round_1(response)
+        match_list = Round.create_match_list(player_list, response) 
         
-        for tournament in tournament_list:
-            if value in tournament_list:
-                print(True)
-    
-    
-        response = self.view.display_tournaments_menu()
-        menu_choice = {
-            "A": self.create_new_tournament,
-            "R": self.view.display_menu,
-            "M": self.all_tournament_list
-        }
-              
-"""
+        for match in match_list:
+            score1, score2 = MatchView.display_match(match)
+
+            #[3] = scorematch
+            match[0][3] = score1
+            match[1][3] = score2
+            
+            #on check les scores et update le ranking en fonction 
+            if float(score1) > float(score2):
+                Round.update_ranking(response, match[0][0], 1) 
+            elif float(score1) < float(score2):
+                Round.update_ranking(response, match[1][0], 1) 
+            else:
+                Round.update_ranking(response, match[0][0], 0.5)
+                Round.update_ranking(response, match[1][0], 0.5)
+
+        Round.update_match_list(response, match_list)
+        
+        MainView.success('Round Finished')
+            
+
+

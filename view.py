@@ -208,3 +208,28 @@ class TournamentView():
     def display_delete_view(tournament_id):
         print(f"Tournament {tournament_id} succesfuly delete")
         input("Press any button to return")
+
+    def display_start_tournament(all_tournaments):
+        table_data = [
+            {
+                "ID": data.get("id"), 
+                "Name": data.get("Name"), 
+                "City": data.get("City"),
+                "Players": len(data.get("Players")), 
+                "Description": data.get("Description", "")[0:15] 
+            } for data in all_tournaments
+        ]
+        print("List of tournament ready to start ! ")
+        print(tabulate(table_data, headers="keys", tablefmt="fancy_grid"))
+        return input("tap id of tournament you want to start: ")
+
+class MatchView():
+    def display_match(match):
+        player1_data = match[0] 
+        player2_data = match[1]
+        
+        print(f"{player1_data[1]} vs {player2_data[1]}")
+        score1 = input(f"Score {player1_data[1]}: ")
+        score2 = input(f"Score {player2_data[1]}: ")
+
+        return score1, score2
