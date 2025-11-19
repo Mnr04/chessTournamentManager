@@ -1,4 +1,4 @@
-from view import MainView, PlayersView, TournamentView, MatchView
+from view import MainView, PlayersView, TournamentView, MatchView, RoundView
 from models import Player, Tournament, Round
 import datetime
 
@@ -150,11 +150,11 @@ class TournamentController():
             response = TournamentView.display_tournaments_sub_menu()
             menu_choice = {
                 "1": self.create_new_tournament,
-                "2": self.start_tournament,
+                "2": self.launch_tournament,
                 "3": self.update_tournament,
                 "4": self.view_tournament_info,
                 "5": self.view_all_tournaments,
-                "6": self.remove_tournaments
+                "6": self.remove_tournaments,
             }
         
             if response in menu_choice:
@@ -331,33 +331,58 @@ class TournamentController():
             TournamentView.display_delete_view(tournament_id)     
   
     #Start Tournament
-    def start_tournament(self):
-        tournament_not_start = [t for t in Tournament.get_all_tournement_info() if t['Actual_round'] == "0" ]
-        response = TournamentView.display_start_tournament(tournament_not_start)
-        Tournament.update_tournament_statut(response)
-
-        player_list = Round.create_round_1(response)
-        match_list = Round.create_match_list(player_list, response) 
+    def launch_tournament(self):
+        tournament_not_finish = [t for t in Tournament.get_all_tournement_info() if t['Finish'] == False]
+        tournament_id = TournamentView.display_start_tournament(tournament_not_finish)
         
-        for match in match_list:
-            score1, score2 = MatchView.display_match(match)
-
-            #[3] = scorematch
-            match[0][3] = score1
-            match[1][3] = score2
-            
-            #on check les scores et update le ranking en fonction 
-            if float(score1) > float(score2):
-                Round.update_ranking(response, match[0][0], 1) 
-            elif float(score1) < float(score2):
-                Round.update_ranking(response, match[1][0], 1) 
-            else:
-                Round.update_ranking(response, match[0][0], 0.5)
-                Round.update_ranking(response, match[1][0], 0.5)
-
-        Round.update_match_list(response, match_list)
+        #On active le compteur des rounds pour le tournois
+        Tournament.start_tournament(tournament_id)
         
-        MainView.success('Round Finished')
-            
+        #On boucle sur le nombre total de tour et on genere les rounds
+        tournament_info = Tournament.get_tournament_by_id(tournament_id)
 
+        actual_round = int(tournament_info["Actual_round"])
+        total_round = int(tournament_info["Total_round"])
+
+
+        while actual_round != total_round:
+            
+            actual_round += 1
+            #on creer le round
+            Round.create_round(actual_round, tournament_id)
+            #on recupère la liste des joueurs
+            round_player = Round.get_round_players_list(tournament_id)
+            #on creer la match list
+            match_list = Round.create_match_list(round_player, tournament_id, actual_round)
+            #on joue les matchs 
+            for match in match_list:
+                score1, score2 = MatchView.display_match(match)
+
+                #[3] = scorematch
+                match[0][3] = score1
+                match[1][3] = score2
+                
+                #on check les scores et update le ranking en fonction 
+                if float(score1) > float(score2):
+                    Round.update_ranking(tournament_id, match[0][0], 1) 
+                elif float(score1) < float(score2):
+                    Round.update_ranking(tournament_id, match[1][0], 1) 
+                else:
+                    Round.update_ranking(tournament_id, match[0][0], 0.5)
+                    Round.update_ranking(tournament_id, match[1][0], 0.5)
+
+            Round.update_match_list(tournament_id, match_list, actual_round)
+            Tournament.update_tournament_statut(tournament_id)
+            MainView.success('Round Finished')
+            response = RoundView.display_continue_tournament(actual_round, total_round)
+
+            if response == '2':
+                break
+
+            if actual_round == total_round:
+                Tournament.finish_tournament(tournament_id)
+                MainView.success('Tournament Finished')
+                break
+        
+        
 

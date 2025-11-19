@@ -3,6 +3,7 @@ import shortuuid
 import os
 import shutil
 import random
+from operator import itemgetter
 
 class Player():
 
@@ -92,13 +93,12 @@ class Tournament():
         self.id = shortuuid.uuid()
         self.name = name
         self.city = city
-        self.start = "Not Start"
-        self.end = "Not Finish"
         self.actual_round = 0
         self.total_round = total_round
         self.players = players
         self.description = description
-        self.start = "0"
+        self.actual_round = 0
+        self.finish = False
         pass
 
     def tournament_to_dict(self):
@@ -109,7 +109,8 @@ class Tournament():
             "Total_round": self.total_round,
             "Players": self.players,
             "Description": self.description,
-            "Start": self.start
+            "Actual_round": self.actual_round,
+            "Finish": self.finish
         }
         return tournois_info
         
@@ -117,8 +118,7 @@ class Tournament():
         #on recupere les donné 
         tournament_data = self.tournament_to_dict()
 
-        directory = "data"
-        file_path = os.path.join(directory, "tournament", self.id, "info.json")
+        file_path = os.path.join("data", "tournament", self.id, "info.json")
         directory_to_create = os.path.dirname(file_path)
         os.makedirs(directory_to_create, exist_ok=True)
 
@@ -189,39 +189,51 @@ class Tournament():
     @classmethod     
     def update_tournament_statut(cls , tournament_id):
         tournament_to_start = cls.get_tournament_by_id(tournament_id)
-        tournament_to_start["Actual_round"] = "1"
+        tournament_to_start["Actual_round"] += 1
         file_path = os.path.join('data', 'tournament', tournament_to_start["id"], "info.json")
         with open(file_path, "w") as file:
             json.dump(tournament_to_start, file, indent=2)
 
-     
+    @staticmethod
+    def start_tournament(tournament_id):
+        file_path = os.path.join("data", "tournament", tournament_id, "Ranking.json")
+        if os.path.exists(file_path):
+            pass
+        else : 
+            directory_to_create = os.path.dirname(file_path)
+            os.makedirs(directory_to_create, exist_ok=True)
+            tournament_data = Tournament.get_tournament_by_id(tournament_id)
+            player_list = [
+                {"Name": p[0], "Surname": p[1], "Id": p[2], "Score": 0} 
+                for p in tournament_data["Players"]
+            ]
+            random.shuffle(player_list)
+            with open(file_path, "w") as file:
+                json.dump(player_list, file, indent=2)
+
+    def finish_tournament(cls , tournament_id):
+        tournament_to_finish = cls.get_tournament_by_id(tournament_id)
+        tournament_to_finish["Finish"] = True
+        file_path = os.path.join('data', 'tournament', tournament_to_finish["id"], "info.json")
+        with open(file_path, "w") as file:
+            json.dump(tournament_to_finish, file, indent=2)
+
 class Round():
     @classmethod
-    def create_round_1(cls, tournament_id):
-        #Creer le dossier Round1
-        directory = "data"
-        file_path = os.path.join(directory, "tournament", tournament_id, "Round_1", "Ranking.json")
-        directory_to_create = os.path.dirname(file_path)
-        os.makedirs(directory_to_create, exist_ok=True)
-        #Générer random player list with score and sort by  
-        tournament_data = Tournament.get_tournament_by_id(tournament_id)
-        player_list = [
-            {"Name": p[0], "Surname": p[1], "Id": p[2], "Score": 0} 
-            for p in tournament_data["Players"]
-        ]
-        random.shuffle(player_list)
-        with open(file_path, "w") as file:
-            json.dump(player_list, file, indent=2)
-
-        #Create match list file
-        directory = "data"
-        file_path = os.path.join(directory, "tournament", tournament_id, "Round_1", "Match.json")
+    def create_round(cls, round_number, tournament_id):
+        #Create match list file + round folder
+        round_number = str(round_number)
+        file_path = os.path.join("data", "tournament", tournament_id, f"Round_{round_number}", "Match.json")
         directory_to_create = os.path.dirname(file_path)
         os.makedirs(directory_to_create, exist_ok=True)
 
-        return player_list
-
-    def create_match_list(player_list, tournament_id):
+    def get_round_players_list(tournament_id):
+        file_path = os.path.join("data", "tournament", tournament_id, "Ranking.json")
+        with open(file_path, "r") as file:
+            ranking = json.load(file)
+        return ranking
+    
+    def create_match_list(player_list, tournament_id, round_number):
         match_list = []
         
         for i in range(0, len(player_list), 2):
@@ -237,26 +249,47 @@ class Round():
             match_list.append(match)
 
             directory = "data"
-            file_path = os.path.join(directory, "tournament", tournament_id, "Round_1", "Match.json")
+            file_path = os.path.join(directory, "tournament", tournament_id, f"Round_{round_number}", "Match.json")
 
         with open(file_path , "w") as file :
             json.dump(match_list, file, indent=2)
             
         return match_list
 
-    def update_match_list(tournament_id, match_list):
+   # def create_round_match_list(player_list, tournament_id):
+        match_list = []
+
+        for i in range(0, len(player_list), 2):
+            
+            player_1 = player_list[i]
+            player_2 = player_list[i + 1]
+
+            match_player_1 = [player_1["Id"], player_1["Name"], player_1["Surname"]]
+            match_player_2 = [player_2["Id"], player_2["Name"], player_2["Surname"]]
+
+            match = (match_player_1, match_player_2)
+
+            match_list.append(match)
+
         directory = "data"
         file_path = os.path.join(directory, "tournament", tournament_id, "Round_1", "Match.json")
 
+        with open(file_path , "w") as file :
+            json.dump(match_list, file, indent=2)
+            
+        return match_list
+
+    def update_match_list(tournament_id, match_list,round_number):
+        directory = "data"
+        file_path = os.path.join(directory, "tournament", tournament_id, f"Round_{round_number}", "Match.json")
 
         with open(file_path , "w") as file :
                 json.dump(match_list, file, indent=2)
-        pass
 
     @classmethod
     def update_ranking(cls, tournament_id, player_id, points_to_add):
         directory = "data"
-        file_path = os.path.join(directory, "tournament", tournament_id, "Round_1", "Ranking.json")
+        file_path = os.path.join(directory, "tournament", tournament_id, "Ranking.json")
 
         if not os.path.exists(file_path):
             return 
@@ -268,10 +301,11 @@ class Round():
             if p["Id"] == player_id: 
                 p["Score"] += points_to_add
                 break
-    
+        
+        #on met a jour le classement 
+        ranking = sorted(ranking, key=lambda x: x['Score'], reverse=True)
+                
         with open(file_path, "w") as file:
             json.dump(ranking, file, indent=2)
-
-
 
 

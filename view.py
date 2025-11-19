@@ -223,6 +223,14 @@ class TournamentView():
         print(tabulate(table_data, headers="keys", tablefmt="fancy_grid"))
         return input("tap id of tournament you want to start: ")
 
+class RoundView():
+    def display_continue_tournament(actual_round, total_round):
+        print(f'Round {actual_round} / {total_round} Finished')
+        print("[Any Button] Continue")
+        print("[2] Stop")
+        reponse = input("Your choice: ")
+        return reponse
+
 class MatchView():
     def display_match(match):
         player1_data = match[0] 
