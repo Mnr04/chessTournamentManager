@@ -117,11 +117,13 @@ class TournamentView():
         
         name = input("Tournament Name: ")
         city = input("City: ")
-        Total_tour_number = input("Total tour number:  (default = 4)")
-        Description = input("description: ")
+        start_date = input("Start Date (YYYY-MM-DD): ")
+        end_date = input("End Date (YYYY-MM-DD): ")
+        total_tour_number = input("Total tour number:  (default = 4)")
+        description = input("description: ")
         numbers_of_players = input("How many players in this Tournament ? : ")
 
-        return {"name": name, "city": city, "Total_tour_number":Total_tour_number, "Description":Description}, numbers_of_players
+        return {"name": name, "city": city, "Total_tour_number":total_tour_number, "Description":description, "Start_date": start_date, "End_date" : end_date}, numbers_of_players
 
     @staticmethod
     def get_players_list():
@@ -140,11 +142,13 @@ class TournamentView():
         print(f"\n--- Update Tournament {tournament['Name']} ---") 
         
         name = input(f"Last Name ({tournament['Name']}): ") or tournament['Name']
-        City = input(f"City ({tournament['City']}): ") or tournament['City']
-        Total_round = input(f"Age ({tournament['Total_round']}): ") or tournament['Total_round']
-        Description = input(f"INE ({tournament['Description']}): ") or tournament['Description']
+        city = input(f"City ({tournament['City']}): ") or tournament['City']
+        start_date = input(f"start date ({tournament['Start_date']}): ") or tournament['Start_date']
+        end_date = input(f"end date ({tournament['End_date']}): ") or tournament['End_date']
+        total_round = input(f"Age ({tournament['Total_round']}): ") or tournament['Total_round']
+        description = input(f"INE ({tournament['Description']}): ") or tournament['Description']
 
-        return {"Name": name, "City": City, "Total_round": Total_round, "Description": Description, "Players": []}
+        return {"Name": name, "City": city, "Total_round": total_round, "Description": description, "Players": [], "Start_date" :start_date, "End_date" :end_date}
     
     def display_players_update_menu():
         print("Do you add or remove player list")

@@ -176,26 +176,49 @@ class TournamentController():
         total_tour_number = tournament_data["Total_tour_number"]
         description = tournament_data["Description"]
         player_list = ""
+        start_date = tournament_data["Start_date"]
+        end_date = tournament_data["End_date"]
 
+        #Date et city verification
         if not name or not city :
             MainView.error("Name or city cannot be empty.")
-            return 
+            return
+        #Number verification
         try : 
             total_tour_number = int(total_tour_number) 
         except:
             total_tour_number = 4
+        #Date verification
+        try : 
+            start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d").date()
+            end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d").date()
+
+        except ValueError:
+            MainView.error("Invalid date format")
+            return
+
+        if start_date > end_date:
+            MainView.error("Invalid date format")
+            return
+            
+        #clean the date
+        start_date_str = start_date.isoformat()
+        end_date_str = end_date.isoformat()
 
         try:
-            #Logic to get numbers of players and send view to get Id, name and surname of players
+        #Logic to get numbers of players and send view to get Id, name and surname of players
             numbers_of_players = int(str_numbers_of_players)
             player_list = self.get_players_list(numbers_of_players)
-            new_tournament = Tournament(name, city, total_tour_number,player_list, description)
+            new_tournament = Tournament(name, city, total_tour_number,player_list, description, start_date_str, end_date_str)
             new_tournament.save_tournament()
-        
+            
             MainView.success(f"Tournament {name} saved successfully!")
             
         except Exception as e:
             MainView.error(f"Error while saving the tournament: {e}")
+            return
+        else : 
+            MainView.error("Probleme with date")
 
     def get_players_list(self, numbers_of_players):
         player_list = []
@@ -229,6 +252,7 @@ class TournamentController():
             MainView.error("Tournament not found!")
             return
 
+        #On recupere les nouveaux inputs
         tournament_data = TournamentView.update_tournament_inputs(tournament_info)
 
         try:
@@ -236,6 +260,24 @@ class TournamentController():
         except ValueError:
             tournament_data['Total_round'] = 4
             return
+        
+        #Date verification
+        try : 
+            tournament_data["Start_date"] = datetime.datetime.strptime(tournament_data["Start_date"], "%Y-%m-%d").date()
+            tournament_data["End_date"] = datetime.datetime.strptime(tournament_data["End_date"], "%Y-%m-%d").date()
+
+        except ValueError:
+            MainView.error("Invalid date format")
+            return
+
+        if tournament_data["Start_date"] > tournament_data["End_date"]:
+            MainView.error("Invalid date format")
+            return
+            
+        #clean the date
+        tournament_data["Start_date"] = tournament_data["Start_date"].isoformat()
+        tournament_data["End_date"] = tournament_data["End_date"].isoformat()
+
         
         #Update Players 
         actual_players_data = tournament_info["Players"]
@@ -338,42 +380,18 @@ class TournamentController():
         #On active le compteur des rounds pour le tournois
         Tournament.start_tournament(tournament_id)
         
-        #On boucle sur le nombre total de tour et on genere les rounds
+        #On recupère les infos du tournois
         tournament_info = Tournament.get_tournament_by_id(tournament_id)
 
+        #on récupère le statut actuel du tournois
         actual_round = int(tournament_info["Actual_round"])
         total_round = int(tournament_info["Total_round"])
 
-
         while actual_round != total_round:
             
-            actual_round += 1
-            #on creer le round
-            Round.create_round(actual_round, tournament_id)
-            #on recupère la liste des joueurs
-            round_player = Round.get_round_players_list(tournament_id)
-            #on creer la match list
-            match_list = Round.create_match_list(round_player, tournament_id, actual_round)
-            #on joue les matchs 
-            for match in match_list:
-                score1, score2 = MatchView.display_match(match)
-
-                #[3] = scorematch
-                match[0][3] = score1
-                match[1][3] = score2
-                
-                #on check les scores et update le ranking en fonction 
-                if float(score1) > float(score2):
-                    Round.update_ranking(tournament_id, match[0][0], 1) 
-                elif float(score1) < float(score2):
-                    Round.update_ranking(tournament_id, match[1][0], 1) 
-                else:
-                    Round.update_ranking(tournament_id, match[0][0], 0.5)
-                    Round.update_ranking(tournament_id, match[1][0], 0.5)
-
-            Round.update_match_list(tournament_id, match_list, actual_round)
-            Tournament.update_tournament_statut(tournament_id)
-            MainView.success('Round Finished')
+            actual_round = TournamentController.run_round(actual_round, tournament_id)
+               
+            #Display pour voir si on contunue
             response = RoundView.display_continue_tournament(actual_round, total_round)
 
             if response == '2':
@@ -384,5 +402,40 @@ class TournamentController():
                 MainView.success('Tournament Finished')
                 break
         
-        
+    def process_match(match_list, tournament_id):
+        for match in match_list:
+            score1, score2 = MatchView.display_match(match)
 
+            match[0][3] = score1
+            match[1][3] = score2
+                
+        #on check les scores et update le ranking en fonction 
+        if float(score1) > float(score2):
+            Round.update_ranking(tournament_id, match[0][0], 1) 
+        elif float(score1) < float(score2):
+            Round.update_ranking(tournament_id, match[1][0], 1) 
+        else:
+            Round.update_ranking(tournament_id, match[0][0], 0.5)
+            Round.update_ranking(tournament_id, match[1][0], 0.5)
+
+    def close_round(tournament_id, actual_round, match_list):
+            Round.update_match_list(tournament_id, match_list, actual_round)
+            Tournament.update_tournament_statut(tournament_id)
+            Round.end_time_round(actual_round, tournament_id)
+            MainView.success(f'Round {actual_round} Finished')
+
+    def run_round(actual_round ,tournament_id):
+        actual_round += 1
+        Round.create_round(actual_round, tournament_id)
+        Round.start_time_round(actual_round, tournament_id)
+        #on recupère la liste des joueurs
+        round_player, player_list = Round.get_round_players_list(tournament_id)
+        #on creer la match list
+        match_list = Round.create_match_list(round_player, tournament_id, actual_round)
+
+        #On Génère les matchs et met à jour le ranking
+        TournamentController.process_match(match_list, tournament_id)
+
+        #On Close le Round
+        TournamentController.close_round(tournament_id, actual_round, match_list)
+        return actual_round

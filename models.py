@@ -3,7 +3,8 @@ import shortuuid
 import os
 import shutil
 import random
-from operator import itemgetter
+import datetime
+
 
 class Player():
 
@@ -87,7 +88,7 @@ class Player():
 
 class Tournament():
 
-    def __init__(self, name, city, total_round, players, description):
+    def __init__(self, name, city, total_round, players, description, start_date, end_date):
 
         # statemapping(0:"not_start", 1="in_progress", 2="finish")
         self.id = shortuuid.uuid()
@@ -99,6 +100,8 @@ class Tournament():
         self.description = description
         self.actual_round = 0
         self.finish = False
+        self.start_date = start_date
+        self.end_date = end_date
         pass
 
     def tournament_to_dict(self):
@@ -106,6 +109,8 @@ class Tournament():
             "id" : self.id,
             "Name" : self.name,
             "City" : self.city,
+            "Start_date": self.start_date,
+            "End_date": self.end_date,
             "Total_round": self.total_round,
             "Players": self.players,
             "Description": self.description,
@@ -211,6 +216,7 @@ class Tournament():
             with open(file_path, "w") as file:
                 json.dump(player_list, file, indent=2)
 
+    @classmethod
     def finish_tournament(cls , tournament_id):
         tournament_to_finish = cls.get_tournament_by_id(tournament_id)
         tournament_to_finish["Finish"] = True
@@ -229,9 +235,14 @@ class Round():
 
     def get_round_players_list(tournament_id):
         file_path = os.path.join("data", "tournament", tournament_id, "Ranking.json")
+        player_list = []
         with open(file_path, "r") as file:
             ranking = json.load(file)
-        return ranking
+            for player in ranking :
+                #ici on recupere la liste des joueurs classé selon le ranking actuelle
+                player_list.append(player["Id"])
+
+        return ranking, player_list
     
     def create_match_list(player_list, tournament_id, round_number):
         match_list = []
@@ -245,34 +256,13 @@ class Round():
             match_player_2 = [player_2["Id"], player_2["Name"], player_2["Surname"], 0]
 
             match = (match_player_1, match_player_2)
+            #on creer un fichier AllMatchList 
+            #pour chaque match quon creer on verifie si il a pas etais joué sinon on lui donne le joueur d'aprés
             
             match_list.append(match)
 
             directory = "data"
             file_path = os.path.join(directory, "tournament", tournament_id, f"Round_{round_number}", "Match.json")
-
-        with open(file_path , "w") as file :
-            json.dump(match_list, file, indent=2)
-            
-        return match_list
-
-   # def create_round_match_list(player_list, tournament_id):
-        match_list = []
-
-        for i in range(0, len(player_list), 2):
-            
-            player_1 = player_list[i]
-            player_2 = player_list[i + 1]
-
-            match_player_1 = [player_1["Id"], player_1["Name"], player_1["Surname"]]
-            match_player_2 = [player_2["Id"], player_2["Name"], player_2["Surname"]]
-
-            match = (match_player_1, match_player_2)
-
-            match_list.append(match)
-
-        directory = "data"
-        file_path = os.path.join(directory, "tournament", tournament_id, "Round_1", "Match.json")
 
         with open(file_path , "w") as file :
             json.dump(match_list, file, indent=2)
@@ -308,4 +298,38 @@ class Round():
         with open(file_path, "w") as file:
             json.dump(ranking, file, indent=2)
 
+    def start_time_round(round_number, tournament_id):
+        #On creer un fichier time.json avec un dictionnaire startTour : et endTour: 
+        file_path = os.path.join("data", "tournament", tournament_id, f"Round_{round_number}", "time.json")
+        directory_to_create = os.path.dirname(file_path)
+        os.makedirs(directory_to_create, exist_ok=True)
+        #la on prend le datetime now au moment ou on lance
+        start_timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
 
+        time = {
+            'start_time' : start_timestamp,
+            'end_time' : ""
+        }
+
+        # et le end time pareil
+        with open(file_path, "w") as file:
+            json.dump(time, file, indent=2)
+    
+    def end_time_round(round_number, tournament_id): 
+        file_path = os.path.join("data", "tournament", tournament_id, f"Round_{round_number}", "time.json")
+        
+        try:
+            with open(file_path, "r") as file:
+                data = json.load(file)
+        except FileNotFoundError:
+            print(f"Erreur  {round_number} n")
+            return
+
+        end_timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+        data['end_time'] = end_timestamp 
+
+        # 3. WRITE : On sauvegarde le tout
+        with open(file_path, "w") as file:
+            json.dump(data, file, indent=2)
+
+ 
