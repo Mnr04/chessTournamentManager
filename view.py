@@ -1,4 +1,5 @@
 from tabulate import tabulate
+import datetime
 
 class MainView:
     #Message 
@@ -46,12 +47,17 @@ class PlayersView():
     def get_new_player_inputs():
         print("\n--- Add a new player ---")
         
-        name = input("Last Name: ")
-        surname = input("First Name: ")
-        age = input("Age: ")
-        ine = input("INE: ")
+        name = InputView.get_valid_name("Last Name: ")
+        surname = InputView.get_valid_name("First Name: ")
+        birth_date = InputView.get_valid_date("Birth Date (YYYY-MM-DD): ")
+        ine = InputView.get_valid_int("INE: ")
 
-        return {"name": name, "surname": surname, "age": age, "ine": ine}
+        return {
+            "name": name, 
+            "surname": surname, 
+            "birth_date": birth_date, 
+            "ine": ine
+        }
     
     #Update Player
     @staticmethod
@@ -64,12 +70,32 @@ class PlayersView():
     def update_player_inputs(player):
         print(f"\n--- Update Player {player['name']} {player['surname']} ---") 
         
-        name = input(f"Last Name ({player['surname']}): ") or player['surname']
-        surname = input(f"First Name ({player['name']}): ") or player['name']
-        age = input(f"Age ({player['age']}): ") or player['age']
-        ine = input(f"INE ({player['ine']}): ") or player['ine']
+        surname = InputView.get_valid_name(
+            f"Last Name ({player['surname']}): ", 
+            default=player['surname']
+        )
+        
+        name = InputView.get_valid_name(
+            f"First Name ({player['name']}): ", 
+            default=player['name']
+        )
+        
+        birth_date = InputView.get_valid_date(
+            f"Birth Date ({player['birth_date']}): ", 
+            default=player['birth_date']
+        )
+        
+        ine = InputView.get_valid_int(
+            f"INE ({player['ine']}): ", 
+            default=player['ine']
+        )
 
-        return {"name": name, "surname": surname, "age": age, "ine": ine}
+        return {
+            "name": name, 
+            "surname": surname, 
+            "birth_date": birth_date, 
+            "ine": ine
+        }
     
     #View Player
     @staticmethod
@@ -77,7 +103,7 @@ class PlayersView():
         print(f"Id : {player_info['id']}")
         print(f"Name : {player_info['name']}")
         print(f"Surname : {player_info['surname']}")
-        print(f"Age : {player_info['age']}")
+        print(f"birth date : {player_info['birth_date']}")
         print(f"Ine : {player_info['ine']}")
         
         response = input("Press any button to return")
@@ -241,7 +267,7 @@ class MatchView():
     @staticmethod
     def display_match(match):
         if match[1] is None:
-            print(f"⚠️  {match[0]['Name']} is exempt (Bye) and wins 1 point.")
+            print(f"{match[0]['Name']} is exempt and wins 1 point.")
             return 1, 0 
         
         player1_data = match[0] 
@@ -287,3 +313,88 @@ class RapportView:
         print(tabulate(player_list, headers="keys", tablefmt="fancy_grid"))
         
         input("Press any button to return")
+
+    @staticmethod
+    def display_round_matches(all_rounds_data):
+
+        for round_data in all_rounds_data:
+            round_name = round_data['name']
+            match_list = round_data['match_list']
+            
+            print(f"{round_name}") 
+            
+            table_data = []
+
+            for match in match_list:
+                p1_score = match[0]["Match_score"]
+                p1_name = f"{match[0]['Name']} {match[0]['Surname']}"
+            
+                if match[1] is None: 
+                    p2_name = "Exempté"
+                    p2_score = "0"
+                    p1_score = "1" 
+                else:
+                    p2_score = match[1]["Match_score"]
+                    p2_name = f"{match[1]['Name']} {match[1]['Surname']}"
+
+                row = [p1_name, p1_score, "VS", p2_score, p2_name]
+                table_data.append(row)
+
+            headers = ["Joueur 1", "Pts", "", "Pts", "Joueur 2"]
+            print(tabulate(table_data, headers=headers, tablefmt="fancy_grid"))
+      
+class InputView:
+    @staticmethod
+    def get_non_empty_string(prompt):
+        while True:
+            user_input = input(prompt)
+            if user_input.strip(): 
+                return user_input
+            print("Error: This field cannot be empty.")
+
+    @staticmethod
+    def get_valid_date(prompt):
+        while True:
+            date_str = input(prompt)
+            try:
+                date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
+                return date_obj.isoformat()
+            except ValueError:
+                print("Error: Invalid date format. Please use YYYY-MM-DD.")
+
+    @staticmethod
+    def get_valid_int(prompt):
+        while True:
+            value = input(prompt)
+            try:
+                return int(value)
+            except ValueError:
+                print("Error: Please enter a valid number.")
+
+    @staticmethod
+    def get_valid_name(prompt):
+        while True:
+            user_input = input(prompt).strip()
+            if not user_input:
+                print("Error: This field cannot be empty.")
+                continue
+            
+            if user_input.isalpha():
+                return user_input
+            else:
+                print("Error: Name must contain only letters.")
+    
+    @staticmethod
+    def get_valid_int(prompt):
+        while True:
+            user_input = input(prompt)
+            
+            try:
+                value = int(user_input)
+                if value >= 0: 
+                    return value
+                else:
+                    print("Error: The number must be positive.")
+                    
+            except ValueError:
+                print("Error: Please enter a valid number.")

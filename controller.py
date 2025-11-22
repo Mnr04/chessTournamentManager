@@ -36,7 +36,7 @@ class PlayersController():
         self.players_view = PlayersView()
         self.main_view = MainView()
 
-    # Sub_Menu
+    # Sub player menu
     def players_sub_menu(self):
         while True:
             response = self.players_view.display_players_sub_menu()
@@ -62,54 +62,33 @@ class PlayersController():
     # Create
     def create_new_player(self):
         player_data = self.players_view.get_new_player_inputs()
+        
+        name = player_data["name"]
+        surname = player_data["surname"]
+        birth_date = player_data["birth_date"] 
+        ine = player_data["ine"]
 
         try:
-            name = player_data["name"]
-            surname = player_data["surname"]
-            age_str = player_data["age"]
-            ine_str = player_data["ine"]
-
-            if not name or not surname or not age_str or not ine_str:
-                self.main_view.error("Name, surname, age, and INE cannot be empty.")
-                return 
-
-            age = int(age_str) 
-            ine = int(ine_str)
-
-        except ValueError:
-            self.main_view.error(f"Error: The age '{age_str}' or INE '{ine_str}' is not a valid number.")
-            return
-
-        try:
-            new_player = Player(surname=surname, name=name, age=age, ine=ine)
-            new_player.save_new_player() 
-            
+            new_player = Player(surname, name, birth_date, ine)
+            new_player.save_new_player()
             self.main_view.success(f"Player {name} {surname} saved successfully!")
             
         except Exception as e:
-            self.main_view.error(f"Error while saving the player: {e}")
+            self.main_view.error(f"Technical error while saving: {e}")
     
     # Update
     def update_player(self):
-        #on recupere un id
+        # Get id from view
         player_id = self.players_view.get_id_view()
-
-        #on recupere les info du joueur via son id 
+        # Get all data 
         player_info = Player.get_players_by_id(player_id)
-
+        # Case where player doesn't exist
         if not player_info:
             self.main_view.error("Player not found!")
             return
-
+        # Get new inputs from display
         player_data = self.players_view.update_player_inputs(player_info)
-
-        try:
-            player_data['age'] = int(player_data['age'])
-            player_data['ine'] = int(player_data['ine'])
-        except ValueError:
-            self.main_view.error("Error , age or ine is not valid")
-            return 
-
+        # Update and save data
         try:
             Player.update_players(player_id, player_data)
             self.main_view.success("Player updated successfully!")
@@ -118,33 +97,46 @@ class PlayersController():
 
     # View
     def view_player(self):
-        #Afficher une vue qui permet de choisir un joueur via son ID
+        # Get id from view
         player_id = self.players_view.get_id_view()
 
-        #On récupère les infos du joueur
+        # Get info from model -->  database
         player_info = Player.get_players_by_id(player_id)
 
+        # Case where player doesn't exist
         if not player_info:
             self.main_view.error("Player not found!")
             return
         
-        #On affiche ses données via un view
+        # Display player data
         self.players_view.display_player_info(player_info)
 
-    # view all players
+    # view all 
     def view_all_player(self):
-        #On récupère tout les joueurs 
+        # Get all players from Model --> Database
         all_players_sorted = Player.get_all_players()
+        # Sort player by surname
         all_players_sorted = sorted(all_players_sorted, key=lambda x: x['surname'], reverse=False)
+        # Display all players infos
         self.players_view.display_all_players(all_players_sorted)
  
     # Remove player
     def remove_player(self):
-        #recupere player with id
+        # Get id from view
         player_id = self.players_view.get_id_view()
-        #creer option dans le model qui va supprimer ce joueur de la base de données
-        Player.delete_player(player_id)
-        self.players_view.display_delete_view(player_id)
+
+        # Get info from model -->  database
+        player_info = Player.get_players_by_id(player_id)
+
+        # Case where player doesn't exist
+        if not player_info:
+            self.main_view.error("Player not found!")
+            return
+        else :
+            # remove player from database 
+            Player.delete_player(player_id)
+            # Print message 
+            self.players_view.display_delete_view(player_id)
 
 class TournamentController():
     def tournament_sub_menu(self):
@@ -413,9 +405,15 @@ class TournamentController():
         for match in match_list:
             score1, score2 = MatchView.display_match(match)
 
-            match[0]["Match_score"] = score1
-            match[1]["Match_score"] = score2
-                
+            #Case with 1 player exempt
+            if match[1] == None :
+                match[0]["Match_score"] = score1
+                pass
+
+            else : 
+                match[0]["Match_score"] = score1
+                match[1]["Match_score"] = score2
+            
             #on check les scores et update le ranking en fonction 
             if float(score1) > float(score2):
                 Round.update_ranking(tournament_id, match[0]["Id"], 1) 
@@ -439,6 +437,7 @@ class TournamentController():
         player_list_sort= Round.get_round_players_list(tournament_id)
         #on creer la match list
         match_list = TournamentController.generate_pairs(player_list_sort, match_history)
+        print(match_list)
         #On Génère les matchs et met à jour le ranking
         TournamentController.process_match(match_list, tournament_id)
         #On Close le Round
@@ -500,7 +499,7 @@ class RapportController:
                 "2": self.tournament_controller.view_all_tournaments,
                 "3": self.tournament_controller.view_tournament_info,
                 "4": self.tournament_player_list,
-                "5": ''
+                "5": self.tournament_summary
             }
         
             if response in menu_choice:
@@ -524,3 +523,8 @@ class RapportController:
 
         tournament_info['Players'] = player_list
         RapportView.display_players_in_tournament(tournament_info["Name"],player_list)
+
+    def tournament_summary(self):
+        tournament_id = TournamentView.get_id_view()
+        all_rounds_data = Round.tournament_summary(tournament_id)
+        RapportView.display_round_matches(all_rounds_data)
