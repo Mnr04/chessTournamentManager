@@ -1,5 +1,6 @@
 from view import MainView, PlayersView, TournamentView, MatchView, RoundView, RapportView, InputView
-from models import Player, Tournament, Round
+from models import Player, Tournament, Round, Match
+import datetime
 
 class MainController:
     def __init__(self):
@@ -209,7 +210,7 @@ class TournamentController():
 
     def update_tournament(self):
         # Select a tournament 
-        target_tournament = TournamentController.select_tournament(filter_condition=lambda t: t['actual_round'] == 0)
+        target_tournament = self.select_tournament(filter_condition=lambda t: t.actual_round == 0)
         
         if not target_tournament:
                 return
@@ -220,11 +221,10 @@ class TournamentController():
             return
         
         #Update Players 
-        actual_players_data = target_tournament["players"]
-        players_data = self.manage_tournament_players(actual_players_data)
+        players_data = self.manage_tournament_players(target_tournament.players)
 
         try:
-            Tournament.update_tournament(target_tournament["id"], update_info ,players_data)
+            Tournament.update_tournament(target_tournament.id, update_info ,players_data)
             MainView.success("Tournament updated successfully!")
         except Exception as e:
             MainView.error(f"Error: {e}")
@@ -236,8 +236,8 @@ class TournamentController():
             MainView.error("No Tournament!")
             return
         
-        player_list = sorted(target_tournament['players'], key=lambda x: x[1], reverse=False)
-        target_tournament['players'] = player_list
+        player_list = sorted(target_tournament.players, key=lambda x: x.surname, reverse=False)
+        target_tournament.players = player_list
         
      
         TournamentView.display_tournament_info(target_tournament)
@@ -260,7 +260,7 @@ class TournamentController():
 
         already_registered = []
         if actual_players_data:
-            already_registered = [p[2] for p in actual_players_data]
+            already_registered = [p.id for p in actual_players_data]
         
         for i in range(int(number_of_players)):
             while True:
@@ -272,33 +272,31 @@ class TournamentController():
                     print("You must select a player.")
                     continue
       
-                if selected_player['id'] in already_registered:
+                if selected_player.id in already_registered:
                     MainView.error("Player already registered in this tournament.")
                     continue 
 
                 is_duplicate = False
+                print(registered_players)
                 for p in registered_players:
-                    if p[2] == selected_player['id']:
+                    if p.id == selected_player.id:
                         is_duplicate = True
                         break 
       
                 if is_duplicate:
-                    MainView.error(f"{selected_player['surname']} is already selected in this list!")
+                    MainView.error(f"{selected_player.surname} is already selected in this list!")
                     continue 
 
 
-                registered_players.append([
-                    selected_player['surname'], 
-                    selected_player['name'], 
-                    selected_player['id']
-                ])
-                MainView.success(f"Player {selected_player['surname']} added!")
+                registered_players.append(selected_player)
+                MainView.success(f"Player {selected_player.surname} added!")
                 break 
                     
         return registered_players
 
     @classmethod
     def select_tournament(cls, filter_condition=None):
+        # Get all tournament 
         all_tournaments = Tournament.get_all_tournement()
 
         if filter_condition:
@@ -336,7 +334,7 @@ class TournamentController():
             
             if response == "1": 
                 number_of_players = TournamentView.display_numbers_players("Add")
-                list_update = self.get_players_list(number_of_players, actual_players_data=actual_players_data)
+                list_update = self.get_players_list(number_of_players, actual_players_data)
                 actual_players_data += list_update
             
             elif response == "2": 
@@ -366,7 +364,7 @@ class TournamentController():
 
             if 0 <= index < len(players_data):
                 removed = players_data.pop(index)
-                MainView.success(f"Player {removed[0]} deleted.")
+                MainView.success(f"Player {removed.surname} deleted.")
             else:
                 MainView.error("Invalid number.")
 
@@ -374,17 +372,22 @@ class TournamentController():
 
     def launch_tournament(self):
         #Select tournament to launch
-        select_tournament = TournamentController.select_tournament(filter_condition=lambda x: x['finish'] == False)
+        tournament = TournamentController.select_tournament(filter_condition=lambda x: x.finish == False)
         # Initialise standings 
-        Tournament.initialize_standings(select_tournament['id'])
+        Tournament.initialize_standings(tournament.id)
+        
         # Get actual tournament status 
-        actual_round = int(select_tournament["actual_round"])
-        total_round = int(select_tournament["total_round"])
-
+        actual_round = int(tournament.actual_round)
+        total_round = int(tournament.total_round)
+        
         #initialise match_history
         match_history = ()
         while actual_round != total_round:
-            
+            #on lance un nouveau round
+            RoundController.run_round(tournament, match_history)
+            #Create new round object
+
+        """     
             actual_round = RoundController.run_round(actual_round, select_tournament['id'], match_history)
                
             #Display to check if we continue
@@ -397,8 +400,7 @@ class TournamentController():
                 Tournament.finish_tournament(select_tournament['id'])
                 MainView.success('Tournament Finished')
                 break
-            
-      
+        """    
     def has_already_played(p1_id, p2_id, match_history):
         if [p1_id, p2_id] in match_history:
             return True
@@ -415,52 +417,53 @@ class RoundController:
         MainView.success(f'Round {actual_round} Finished')
 
     @classmethod
-    def run_round(cls, actual_round ,tournament_id, match_history):
-        actual_round += 1
-        Round.create_round(actual_round, tournament_id)
-        Round.start_time_round(actual_round, tournament_id)
+    def run_round(cls, tournament, match_history):
+        tournament.actual_round += 1
+        start_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+        new_round = Round(f"Round {tournament.actual_round}", start_time)
+
         # Get Player List
-        player_list_sort= Round.get_round_players_list(tournament_id)
-        #Create match
-        match_list = RoundController.generate_pairs(player_list_sort, tournament_id)
-        print(match_list)
-        # Match Processing
-        MatchController.process_match(match_list, tournament_id)
+        players_list = Round.get_round_players_list(tournament.id)
+        # Sort players by score
+        players_list_sorted = sorted(players_list, key=lambda p: p.score, reverse=True)
+        # Generate Pairs
+        match_list = cls.generate_pairs(players_list_sorted, tournament.id)
+        new_round.match = match_list
+        # Creer match objects
+        # Process Match 
         # Close Round
-        cls.close_round(tournament_id, actual_round, match_list)
-        return actual_round
 
-    def generate_pairs(player_list_sort, tournament_id):
-        match_list = []
+      
 
-        match_history = Round.get_all_pairs_played(tournament_id)
-
-        if len(player_list_sort) % 2 != 0:
-            exit_player = player_list_sort.pop() 
-            match_exit = [exit_player, None] 
+    @staticmethod
+    def generate_pairs(players_list_sorted, match_history):
+        match_list = [] 
+        
+        if len(players_list_sorted) % 2 != 0:
+            exit_player = players_list_sorted.pop()
+            match_exit = Match(player1=exit_player, player2=None, score1=1, score2=0)
             match_list.append(match_exit)
         
-        while len(player_list_sort) > 0:
-            player1 = player_list_sort.pop(0)
+        while len(players_list_sorted) > 0:
+            p1 = players_list_sorted.pop(0) 
             match_found = False
 
-            for i in range(len(player_list_sort)):
-                possible_opponent = player_list_sort[i]
-
-                p1_id = player1['id']
-                p2_id = possible_opponent['id']
+            for i in range(len(players_list_sorted)):
+                possible_opponent = players_list_sorted[i] 
                 
-                if not TournamentController.has_already_played(p1_id, p2_id, match_history):
-                    player2 = player_list_sort.pop(i) 
-                    match = [player1, player2]
-                    match_list.append(match)
+                if not TournamentController.has_already_played(p1.id, possible_opponent.id, match_history):
+                    p2 = players_list_sorted.pop(i)
+                    
+                    new_match = Match(player1=p1, player2=p2)
+                    match_list.append(new_match)
                     match_found = True
                     break 
             
-            if match_found == False:
-                player2 = player_list_sort.pop(0)
-                match = [player1, player2]
-                match_list.append(match) 
+            if not match_found:
+                p2 = players_list_sorted.pop(0)
+                new_match = Match(player1=p1, player2=p2)
+                match_list.append(new_match)
+                
         return match_list
 
 class MatchController:

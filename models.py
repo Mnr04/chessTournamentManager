@@ -83,15 +83,15 @@ class Player():
 
 class Tournament():
 
-    def __init__(self, name, city, total_round, players, description, start_date, end_date, id=None):
+    def __init__(self, name, city, total_round, players, description, start_date, end_date, actual_round = 0, finish = False, id=None):
         self.id = id if id else shortuuid.uuid()
         self.name = name
         self.city = city
-        self.actual_round = 0
+        self.actual_round = actual_round
         self.total_round = total_round
         self.players = players
         self.description = description
-        self.finish = False
+        self.finish = finish
         self.start_date = start_date
         self.end_date = end_date
 
@@ -186,7 +186,9 @@ class Tournament():
        tournament.total_round = new_data_dict['total_round']
        tournament.description = new_data_dict['description']
 
-        #Players a gerer
+
+       tournament.players = players_data_list
+        
         #Save
        tournament.save_tournament()
        
@@ -212,7 +214,6 @@ class Tournament():
         # Transform and save
         tournament_to_start.save_tournament()
         
-
     @staticmethod
     def initialize_standings(tournament_id):
         
@@ -238,7 +239,20 @@ class Tournament():
         #Transform into dict and save
         tournament_to_finish.save_tournament()
 
-class Round():
+class Round:
+    def __init__(self, name, start_time, end_time=None, matches=None):
+        self.name = name                 
+        self.start_time = start_time     
+        self.end_time = end_time         
+        self.matches = matches if matches is not None else []
+    
+    class Round:
+        def __init__(self, name, start_time, end_time=None, matches=None):
+            self.name = name
+            self.start_time = start_time
+            self.end_time = end_time
+            self.matches = matches if matches else []
+
     @classmethod
     def create_round(cls, round_number, tournament_id):
         #Create match list file + round folder
@@ -247,9 +261,24 @@ class Round():
         directory_to_create = os.path.dirname(file_path)
         os.makedirs(directory_to_create, exist_ok=True)
 
+    @staticmethod
     def get_round_players_list(tournament_id):
-        file_path = Path("data") / "tournament" /tournament_id /"Ranking.json"
-        return JsonManager.load_data(file_path)
+        file_path = Path("data") / "tournament" / tournament_id / "standings.json"
+        standings_data = JsonManager.load_data(file_path)
+        
+        players_list = []
+
+        for player in standings_data:
+            id = player['id']
+            score = player['score']
+
+            player_obj = Player.get_players_by_id(id)
+            #Create score
+            player_obj.score = score
+
+            players_list.append(player_obj)
+
+        return players_list
         
     def update_match_list(tournament_id, match_list,round_number):
         file_path = Path("data") /  "tournament" /tournament_id / f"Round_{round_number}" /"Match.json"
@@ -302,32 +331,25 @@ class Round():
         JsonManager.save_data(file_path, data)
 
     def tournament_summary(tournament_id):
-        # Build the path to the tournament directory
         tournament_dir = Path("data") / "tournament" / tournament_id
     
-        # Retrieve all sub-folders if the directory exists
         if tournament_dir.exists():
             round_folders = [x for x in tournament_dir.iterdir() if x.is_dir()]
         else:
             round_folders = []
 
-        # Sort folders 
         round_folders.sort()
         
         all_rounds_data = []
 
-        # 4. Loop in each round folder
         for folder in round_folders:
             target_file = folder / "Match.json" 
 
             if target_file.exists():
-                # Load match data using the DAO
                 data = JsonManager.load_data(target_file)
                 
-                # Extract JUST the folder name (e.g., "Round_1") from the full path
                 current_round_name = folder.name 
        
-                # Structure data for the report
                 round_summary = {
                     "name": current_round_name, 
                     "match_list": data      
@@ -353,3 +375,11 @@ class Round():
                     pairs_list.append([p1, p2])
                     
         return pairs_list
+    
+
+class Match():
+    def __init__(self, player_1, player_2, score_1 = 0, score_2 = 0):
+        self.player_1 = player_1,
+        self.player_2 = player_2,
+        self.score1 = score_1,
+        self.score2 = score_2

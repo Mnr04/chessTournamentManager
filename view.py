@@ -127,7 +127,7 @@ class PlayersView():
     def display_all_players(all_players):
         # Transform player objects in dictonnary
         table_data = [player.to_dict() for player in all_players]
-        print(tabulate(all_players, headers="keys", tablefmt="fancy_grid"))
+        print(tabulate(table_data, headers="keys", tablefmt="fancy_grid"))
     
         input("Press any button to return")
 
@@ -175,40 +175,47 @@ class TournamentView():
 
     @staticmethod
     def update_tournament_inputs(tournament):
-        print(f"\n--- Update Tournament {tournament['name']} ---") 
+        print(f"\n--- Update Tournament {tournament.name} ---") 
         
         name = InputView.get_valid_name(
-            f"Name ({tournament['name']}): ", 
-            default=tournament['name']
+            f"Name ({tournament.name}): ", 
+            default=tournament.name
         )
         
         city = InputView.get_valid_name(
-            f"City ({tournament['city']}): ", 
-            default=tournament['city']
+            f"City ({tournament.city}): ", 
+            default=tournament.city
         )
         
         start_date = InputView.get_valid_date(
-            f"Start Date ({tournament['start_date']}): ", 
-            default=tournament['start_date']
+            f"Start Date ({tournament.start_date}): ", 
+            default=tournament.start_date
         )
 
         end_date = InputView.get_valid_date(
-            f"End date ({tournament['end_date']}): ", 
-            default=tournament['end_date']
+            f"End date ({tournament.end_date}): ", 
+            default=tournament.end_date
         )
         
         total_round = InputView.get_valid_int(
-            f"Total Round ({tournament['total_round']}): ", 
-            default=tournament['total_round']
+            f"Total Round ({tournament.total_round}): ", 
+            default=tournament.total_round
         )
 
         description = InputView.get_valid_name(
-            f"Description ({tournament['description']}): ", 
-            default=tournament['description']
+            f"Description ({tournament.description}): ", 
+            default=tournament.description
         )
 
-
-        return {"name": name, "city": city, "total_round": total_round, "description": description, "players": [], "start_date" :start_date, "end_date" :end_date}
+        return {
+            "name": name, 
+            "city": city, 
+            "total_round": total_round, 
+            "description": description, 
+            "players": [], 
+            "start_date": start_date, 
+            "end_date": end_date
+        }
     
     @staticmethod
     def display_players_update_menu():
@@ -230,36 +237,36 @@ class TournamentView():
         if not players_list:
             print("   🚫 No players registered yet.")
         else:
-            headers = ["Surname", "Name", "ID"]
-            print(tabulate(players_list, headers=headers, tablefmt="simple"))
-
+            table_data = [player.to_dict() for player in players_list]
+            print(tabulate(table_data, headers="keys", tablefmt="fancy_grid"))
+  
     @staticmethod
-    def display_tournament_info(tournaments_info):
+    def display_tournament_info(tournament): 
         print("\n--- TOURNAMENT DETAILS ---")
 
         general_data = [
-            ["Name", tournaments_info['name']],
-            ["City", tournaments_info['city']],
-            ["Start Date", tournaments_info['start_date']],
-            ["End Date", tournaments_info['end_date']],
-            ["Total Rounds", tournaments_info['total_round']],
-            ["Finish", "Finished" if tournaments_info['finish'] else "In Progress"],
-            ["Description", tournaments_info.get('description', 'N/A')]
+            ["Name", tournament.name],
+            ["City", tournament.city],
+            ["Start Date", tournament.start_date],
+            ["End Date", tournament.end_date],
+            ["Total Rounds", tournament.total_round],
+            ["Finish", "Finished" if tournament.finish else "In Progress"],
+            ["Description", tournament.description] 
         ]
 
         print(tabulate(general_data, tablefmt="fancy_grid"))
 
-        len_players = len(tournaments_info['players'])
+        len_players = len(tournament.players)
         print(f"\n -- REGISTERED PLAYERS ({len_players}) ---")
 
         if len_players == 0:
             print("   No players registered yet.")
         else:
-
             headers = ["Name", "Surname", "ID"]
             
+            players_data = [[p.name, p.surname, p.id] for p in tournament.players]
 
-            print(tabulate(tournaments_info['players'], headers=headers, tablefmt="fancy_grid"))
+            print(tabulate(players_data, headers=headers, tablefmt="fancy_grid"))
         
         input("\nPress Enter to return...")
     
@@ -267,11 +274,11 @@ class TournamentView():
     def display_all_tournament(all_tournaments):
         table_data = [
             {
-                "id": data.get("id"), 
-                "name": data.get("name"), 
-                "city": data.get("city"),
-                "players": len(data.get("players")), 
-                "description": data.get("description", "")[0:15] 
+                "ID": data.id, 
+                "Name": data.name, 
+                "City": data.city,
+                "Players": len(data.players), 
+                "Description": data.description[0:15] if data.description else ""
             } for data in all_tournaments
         ]
             
@@ -288,7 +295,7 @@ class TournamentView():
     def display_tournament_list(all_tournaments):
         print("\n--- Tournament List ---")
         for i, tournament in enumerate(all_tournaments, start=1):
-            print(f"[{i}] {tournament['name']} {tournament['city']}")
+            print(f"[{i}] {tournament.name} {tournament.city}")
             
         print("[0] Return")
 
@@ -297,7 +304,7 @@ class TournamentView():
         print("\n--- DELETE PLAYER ---")
         
         for i, p in enumerate(players_list):
-            print(f"[{i + 1}] {p[0]} {p[1]}") 
+            print(f"[{i + 1}] {p.name} {p.surname}") 
             
         choice = InputView.get_valid_int(f"Number to remove (0 to cancel): ")
         return choice
