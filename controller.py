@@ -1,13 +1,14 @@
-from view import MainView, PlayersView, TournamentView, MatchView, RoundView, RapportView, InputView
+from view import MainView, PlayersView, TournamentView, MatchView, RoundView, RepportView, InputView
 from models import Player, Tournament, Round, Match
 import datetime
+import time
 
 class MainController:
     def __init__(self):
         self.view = MainView()
         self.players_controller = PlayersController()
         self.tournaments_controller = TournamentController()
-        self.rapport_controller = RapportController()
+        self.repport_controller = RepportController()
   
     def run(self):
         while True:
@@ -17,7 +18,7 @@ class MainController:
             menu_choice = {
                 "1": self.players_controller.players_sub_menu,
                 "2": self.tournaments_controller.tournament_sub_menu,
-                "3": self.rapport_controller.Rapport_sub_menu,
+                "3": self.repport_controller.Repport_sub_menu,
             }
         
             if response in menu_choice:
@@ -38,6 +39,7 @@ class PlayersController():
 
     def players_sub_menu(self):
         while True:
+            MainView.clean_console()
             response = self.players_view.display_players_sub_menu()
 
             menu_choice = {
@@ -78,6 +80,8 @@ class PlayersController():
             new_player = Player(**player_data)
             new_player.save_new_player()
             self.main_view.success(f"✅ Player {player_data['name']} {player_data['surname']} saved successfully!")
+            time.sleep(1.5)
+            self.main_view.clean_console()
             
         except Exception as e:
             self.main_view.error(f"Technical error while saving: {e}")
@@ -119,6 +123,7 @@ class PlayersController():
         target_player = self.select_player()
 
         if not target_player:
+            time.sleep(1)
             return
 
         while True:
@@ -138,18 +143,22 @@ class PlayersController():
 
         Player.update_players(target_player.id, updated_data)
         self.main_view.success(" Player updated successfully!")
+        time.sleep(1)
+        MainView.clean_console()
             
     def view_player(self):
         target_player = self.select_player()
+        MainView.clean_console()
 
         if not target_player:
+            MainView.error("No players to display")
+            time.sleep(1)
             return
         
         # Get info from model -->  database
         player_info = Player.get_players_by_id(target_player.id)
         # Case where player doesn't exist
         if not player_info:
-            self.main_view.error("Player not found!")
             return
         
         # Display player data
@@ -161,12 +170,17 @@ class PlayersController():
         # Sort player by surname
         all_players_sorted = sorted(all_players_sorted, key=lambda x: x.surname, reverse=False)
         # Display all players infos
+        if all_players_sorted == []:
+            MainView.error("No players to display")
+            time.sleep(1)
+            return
         self.players_view.display_all_players(all_players_sorted)
  
     def remove_player(self):
         target_player = self.select_player()
 
         if not target_player:
+            time.sleep(1)
             return
 
         # Get info from model -->  database
@@ -179,6 +193,7 @@ class PlayersController():
         else :
             # remove player from database 
             Player.delete_player(player_info.id)
+            MainView.clean_console()
             # Print message 
             self.players_view.display_delete_view(player_info)
    
@@ -532,15 +547,15 @@ class MatchController:
         
         return True
     
-class RapportController:
+class RepportController:
     def __init__(self):
             self.players_controller = PlayersController()
             self.tournament_controller = TournamentController()
             self.main_view = MainView()
 
-    def Rapport_sub_menu(self):
+    def Repport_sub_menu(self):
         while True:
-            response = RapportView.display_rapport_sub_menu()
+            response = RepportView.display_repport_sub_menu()
 
             menu_choice = {
                 "1": self.players_controller.view_all_player,
@@ -569,7 +584,7 @@ class RapportController:
         
         player_list_dicts = [p.to_dict() for p in player_list_sorted]
 
-        RapportView.display_players_in_tournament(target_tournament.name, player_list_dicts)
+        RepportView.display_players_in_tournament(target_tournament.name, player_list_dicts)
 
     def tournament_summary(self):
         target_tournament = TournamentController.select_tournament(filter_condition= lambda x : x.finish == True)
@@ -577,4 +592,4 @@ class RapportController:
             return
             
         all_rounds_data = Round.tournament_summary(target_tournament.id)
-        RapportView.display_round_matches(all_rounds_data)
+        RepportView.display_round_matches(all_rounds_data)

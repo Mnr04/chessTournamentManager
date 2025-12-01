@@ -1,12 +1,20 @@
 from tabulate import tabulate
 import datetime
 import re
-import os
+import questionary
+from questionary import Choice
+from rich.console import Console
+from rich.theme import Theme
+from rich.panel import Panel
+from rich.text import Text
+
+console= Console()
+
 
 class MainView:
     @staticmethod
     def welcome_message():
-        print("--- Welcome in Chess Manager ---")
+        console.print(Panel.fit("♟️  Chess Manager",  style="bold blue"))
     
     @staticmethod
     def finish_message():
@@ -14,34 +22,45 @@ class MainView:
 
     @staticmethod
     def error(message):
-        print(message)
+        console.print(f"❌ [bold red]{message}[/bold red]")
 
     @staticmethod
     def success(message):
-        print(message)
-    
-    # Main Menu
+        console.print(f"✅ [bold green]{message}[/bold green]")
+    @staticmethod
+    def clean_console():
+        console.clear()
+
     def display_menu(self):
-        print("\nMain Menu:")
-        print(" [1] Players 👤")
-        print(" [2] Tournaments 🏆")
-        print(" [3] Rapports")
-        print(" [4] Quit ❌")
-        reponse = input("Your choice: ")
-        return reponse
+        choice = questionary.select(
+            "Select an option:",
+            choices=[
+                Choice("Players 👤", value="1"),
+                Choice("Tournaments 🏆", value="2"),
+                Choice("Reports 📖", value="3"),
+                questionary.Separator(),
+                Choice("Quitter ❌", value="4")
+            ]
+        ).ask()
+        return choice
     
 class PlayersView():
     @staticmethod
     def display_players_sub_menu():
-        print("\nPlayers Menu:")
-        print(" [1] Create Player 👤")
-        print(" [2] Update Player 🏆")
-        print(" [3] View Player")
-        print(" [4] View All Player")
-        print(" [5] Remove Player")
-        print(" [6] Return ❌")
-        reponse = input("Your choice: ")
-        return reponse
+        response = questionary.select(
+            "Players Menu - Select an option:",
+            choices=[
+                Choice("Create Player 👤", value="1"),
+                Choice("Update Player 🛠️", value="2"),
+                Choice("View Player 👁️", value="3"),
+                Choice("View All Players 📋", value="4"),
+                Choice("Remove Player 🗑️", value="5"),
+                questionary.Separator(),
+                Choice("Return 🔙", value="6")
+            ]
+        ).ask()
+        
+        return response
     
     #Create Player
     @staticmethod
@@ -59,13 +78,6 @@ class PlayersView():
             "birth_date": birth_date, 
             "ine": ine
         }
-    
-    #Update Player
-    @staticmethod
-    def get_id_view():
-        print("\n--- Choose player ---")
-        player_id = input("Player id: " )
-        return player_id
     
     @staticmethod
     def update_player_inputs(player):
@@ -106,18 +118,22 @@ class PlayersView():
             
         print("[0] Return")
     
-    #View Player
     @staticmethod
-    def display_player_info(player_info):
-        print(f"Id : {player_info.id}")
-        print(f"Name : {player_info.name}")
-        print(f"Surname : {player_info.surname}")
-        print(f"birth date : {player_info.birth_date}")
-        print(f"Ine : {player_info.ine}")
-        
-        response = input("Press any button to return")
-        return response
+    def display_player_info(player):
+        content = Text()
+        content.append(f"🆔 ID: {player.id}\n", style="bold white")
+        content.append(f"👤 Name: {player.surname.upper()} {player.name}\n", style="bold white")
+        content.append(f"🎂 Birth Date: {player.birth_date}\n", style="bold white")
+        content.append(f"📜 INE: {player.ine}", style="bold white")
 
+        console.print(Panel(
+            content, 
+            title=f"Player Info", 
+            expand=False, 
+            border_style="blue"
+        ))
+        
+        questionary.press_any_key_to_continue().ask()
     #View all Players
     @staticmethod
     def display_all_players(all_players):
@@ -129,23 +145,28 @@ class PlayersView():
 
     #Delete View
     def display_delete_view(cls, player_info):
-        print(f"Player {player_info.name} {player_info.surname} succesfuly delete")
+        MainView.success(f"Player {player_info.name} {player_info.surname} succesfuly delete")
         input("Press any button to return")
 
 class TournamentView():
 
     @staticmethod
     def display_tournaments_sub_menu():
-        print(" [1] Create Tournaments ➕")
-        print(" [2] Start Tournament ➕")
-        print(" [3] Update Tournaments 🛠️")
-        print(" [4] view Tournament ➕")
-        print(" [5] view all Tournaments ➕")
-        print(" [6] Remove Tournaments 🛠️")
-        print(" [7] Return ⬅️")
-        reponse = input("Your choice: ")
+        response = questionary.select(
+            "Tournaments Menu - Select an option:",
+            choices=[
+                Choice("Create Tournament ➕", value="1"),
+                Choice("Start Tournament 🚀", value="2"),
+                Choice("Update Tournament 🛠️", value="3"),
+                Choice("View Tournament Detail 👁️", value="4"),
+                Choice("View All Tournaments 📋", value="5"),
+                Choice("Remove Tournament 🗑️", value="6"),
+                questionary.Separator(),
+                Choice("Return 🔙", value="7")
+            ]
+        ).ask()
         
-        return reponse
+        return response
     
     @staticmethod
     def get_tournament_inputs():
@@ -344,18 +365,22 @@ class MatchView():
 
         return score1, score2
 
-class RapportView:
+class RepportView:
     @staticmethod
-    def display_rapport_sub_menu():
-        print("\n--- 📊 REPORTS MENU ---")
-        print(" [1] List of all players 👥")
-        print(" [2] List of all tournaments 🏆")
-        print(" [3] Tournament Details (Name & Dates) 📅")
-        print(" [4] Tournament Players (Alphabetical) ♟️")
-        print(" [5] Tournament Rounds & Matches ⚔️")
-        print(" [6] Return to Main Menu ❌")
+    def display_repport_sub_menu():
+        response = questionary.select(
+            "Reports Menu - Select an option:",
+            choices=[
+                Choice("List of all players 👥", value="1"),
+                Choice("List of all tournaments 🏆", value="2"),
+                Choice("Tournament Details  📅", value="3"),
+                Choice("Tournament Players  ♟️", value="4"),
+                Choice("Tournament Rounds & Matches ⚔️", value="5"),
+                questionary.Separator(),
+                Choice("Return to Main Menu 🔙", value="6")
+            ]
+        ).ask()
         
-        response = input("Your choice: ")
         return response
     
     def display_players_in_tournament(tournament_name, player_list):
@@ -461,4 +486,4 @@ class InputView:
             elif re.match(r"^[A-Z]{2}[0-9]{5}$", ine_input):
                 return ine_input
             else:
-                print("Invalid Format exemple : AB12345 .")
+                print("Invalid Format exemple : AB12345 ")
