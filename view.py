@@ -361,7 +361,7 @@ class TournamentView():
 
 
 class RoundView():
-    def display_continue_tournament(actual_round):
+    def continue_tournament(actual_round):
         choices = [
             "Continue",
             "Stop"
@@ -411,9 +411,9 @@ class MatchView():
             return 0.5, 0.5
 
 
-class RepportView:
+class ReportView:
     @staticmethod
-    def display_repport_sub_menu():
+    def display_report_sub_menu():
         response = questionary.select(
             "Reports Menu - Select an option:",
             choices=[
