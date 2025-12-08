@@ -1,6 +1,6 @@
 # ♟️ Chess Tournament Manager
 
-A command-line interface (CLI) program developed in Python to manage offline chess tournaments. This software allows you to create players, manage tournaments, automate match pairings, and generate reports.
+A command-line interface (CLI) program developed in Python to manage offline chess tournaments. This application allows you to create players, manage tournaments, automate match pairings, and generate reports.
 
 The project follows the **MVC** (Model-View-Controller) architecture.
 
@@ -11,9 +11,9 @@ The project follows the **MVC** (Model-View-Controller) architecture.
 * **Tournament Management**: Configuration (name, location, dates, number of rounds), adding players.
 
 * **Tournament System**:
-    * Automatic pairing generation .
+    * Automatic pairing generation.
     * Score management (Win, Loss, Draw).
-    * Exempt player management .
+    * Exempt player management.
 
 * **Reports**: Standings, alphabetical player list, tournament history.
 
@@ -24,28 +24,30 @@ Follow these steps to set up the development environment:
 
 ### 1. Clone the repository
 Clone the GitHub repository or download the source files.
-
+```bash
 git clone https://github.com/Mnr04/chess_tournament_manager.git
-
+```
 ### 2. Create a virtual environment
 
 On windows:
-    python -m venv env
-    env\Scripts\activate
-
+```bash
+   python -m venv env
+   env\Scripts\activate
+```
 On macOs / Linux:
-    python3 -m venv env
-    source env/bin/activate
-
+```bash
+python3 -m venv env
+source env/bin/activate
+```
 ### 3. Install dependencies
-
+```bash
 pip install -r requirements.txt
-
-## Launch the program 🚀
-
+```
+## 🚀 Launch the program 
+```bash
 python main.py
-
-### Navigation
+```
+### ➤ Navigation
 
 - Use the Arrow Keys (Up/Down) to navigate through menus.
 - Press Enter to validate a choice.
@@ -55,14 +57,15 @@ python main.py
 
 The project includes a linting report generated with flake8 to ensure compliance with PEP 8 standards.
 
-### View the existing report
+### 👁️ View the existing report
 Simply open the following file in your web browser: flake-report/index.html
 
-### Generate a new report
+### 📝 Generate a new report
 If you modify the code and want to check its quality or generate a new HTML report:
 
 Ensure you are at the root of the project.
 
 Run the following command:
-
+```bash
 flake8 --format=html --htmldir=flake-report
+```
