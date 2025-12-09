@@ -254,7 +254,7 @@ class TournamentView():
         general_data = [
             ["Name", tournament.name],
             ["City", tournament.city],
-            ["Round", f"{tournament.actual_round} / {tournament.total_round}"],
+            ["Round", f"{tournament.current_round} / {tournament.total_round}"],
             ["Start Date", tournament.start_date],
             ["End Date", tournament.end_date],
             ["Total Rounds", tournament.total_round],
@@ -266,7 +266,7 @@ class TournamentView():
 
         # Tabulate for current standings
         if standings:
-            print(f"\n📈 CURRENT STANDINGS (Round {tournament.actual_round})")
+            print(f"\n📈 CURRENT STANDINGS (Round {tournament.current_round})")
             table_data = []
             for i, player in enumerate(standings):
                 full_name = f"{player['surname']} {player['name']}"
@@ -316,7 +316,7 @@ class TournamentView():
         choices = []
 
         for tournament in all_tournaments:
-            round_time = f"{tournament.actual_round}/{tournament.total_round}"
+            round_time = f"{tournament.current_round}/{tournament.total_round}"
             label = f"{tournament.name} ({tournament.city})"
 
             display_name = f"{label:<35} | Round {round_time} 🏆"
@@ -359,31 +359,33 @@ class TournamentView():
             ],
         ).ask()
 
-    def select_players_to_add(available_players):
+    def select_players_to_add(available_players, total_round):
         if not available_players:
             print("⚠️ No more players available to add.")
             return []
 
         choices = [
-            Choice(f"{p.name} {p.surname} ({p.id})", value=p)
+            Choice(f"{p.name} {p.surname} ({p.ine})", value=p)
             for p in available_players
         ]
 
+        min_required = total_round + 1
+
         return questionary.checkbox(
-            "Select players to add to the tournament:",
+            f"Select players (Min {min_required} required for {total_round} rounds):",
             choices=choices,
             instruction="(Space to select, Enter to confirm)"
         ).ask()
 
 
 class RoundView():
-    def continue_tournament(actual_round):
+    def continue_tournament(current_round):
         choices = [
             "Continue",
             "Stop"
         ]
         answer = questionary.select(
-            f"Continue to round_{actual_round+1}",
+            f"Continue to round_{current_round+1}",
             choices=choices,
         ).ask()
 
@@ -392,8 +394,8 @@ class RoundView():
         else:
             return "2"
 
-    def current_standings(players_list, actual_round):
-        print(f"\n--- 🥇 Current Standings round {actual_round} ---")
+    def current_standings(players_list, current_round):
+        print(f"\n--- 🥇 Current Standings round {current_round} ---")
         table_data = []
 
         for i, player in enumerate(players_list):

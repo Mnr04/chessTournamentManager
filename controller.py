@@ -218,12 +218,10 @@ class TournamentController():
             MainView.error("Error: Start date cannot be after End date.")
             return
 
-        MainView.clean_console()
-
         s_players = []
         while True:
 
-            s_players = TournamentView.select_players_to_add(all_players)
+            s_players = TournamentView.select_players_to_add(all_players, tournament_data["total_round"])
 
             if not s_players:
                 choice = input("No players selected. Cancel creation? (y/n): ")
@@ -258,7 +256,7 @@ class TournamentController():
     def update_tournament(self):
         # Select a tournament
         tournament = self.select_tournament(
-            filter_condition=lambda t: t.actual_round == 0
+            filter_condition=lambda t: t.current_round == 0
             )
 
         if not tournament or tournament == "None":
@@ -317,7 +315,7 @@ class TournamentController():
         return target_tournament
 
     def view_all_tournaments(self):
-        all_tournaments = Tournament.get_all_tournement()
+        all_tournaments = Tournament.get_all_tournements()
         MainView.clean_console()
         TournamentView.display_all_tournament(all_tournaments)
 
@@ -357,7 +355,7 @@ class TournamentController():
     @classmethod
     def select_tournament(cls, filter_condition=None):
         # Get all tournament
-        all_tournaments = Tournament.get_all_tournement()
+        all_tournaments = Tournament.get_all_tournements()
 
         if filter_condition:
             tournaments_to_display = [
@@ -439,24 +437,24 @@ class TournamentController():
 
         Tournament.initialize_standings(tournament.id)
 
-        while tournament.actual_round < tournament.total_round:
+        while tournament.current_round < tournament.total_round:
 
             RoundController.run_round(tournament)
 
-            if tournament.actual_round == tournament.total_round:
+            if tournament.current_round == tournament.total_round:
                 break
 
             # Display current standings
             current_standings = Tournament.current_standings(tournament.id)
-            RoundView.current_standings(current_standings, tournament.actual_round)
+            RoundView.current_standings(current_standings, tournament.current_round)
 
             # Option to continue / stop tournament
-            response = RoundView.continue_tournament(tournament.actual_round)
+            response = RoundView.continue_tournament(tournament.current_round)
             if response == '2':
                 MainView.clean_console()
                 break
 
-        if tournament.actual_round == tournament.total_round:
+        if tournament.current_round == tournament.total_round:
             Tournament.finish_tournament(tournament.id)
             MainView.success('Tournament Finished')
 
@@ -476,10 +474,10 @@ class RoundController:
     @classmethod
     def run_round(cls, tournament):
         # Create round count + Round Object
-        tournament.actual_round += 1
+        tournament.current_round += 1
         start_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
 
-        new_round = Round(f"Round {tournament.actual_round}", start_time)
+        new_round = Round(f"Round {tournament.current_round}", start_time)
 
         # Get Player + match history
         players_list = Round.get_round_players_list(tournament.id)
@@ -503,7 +501,7 @@ class RoundController:
 
         if not round_finished:
             print("Round not finish")
-            tournament.actual_round -= 1
+            tournament.current_round -= 1
             return
 
         new_round.end_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")

@@ -94,12 +94,12 @@ class Player():
 class Tournament():
     def __init__(
         self, name, city, total_round, players, description, start_date,
-        end_date, actual_round=0, finish=False, id=None
+        end_date, current_round=0, finish=False, id=None
     ):
         self.id = id if id else shortuuid.uuid()
         self.name = name
         self.city = city
-        self.actual_round = actual_round
+        self.current_round = current_round
         self.total_round = total_round
         self.players = players
         self.description = description
@@ -108,7 +108,7 @@ class Tournament():
         self.end_date = end_date
 
     def to_dict(self):
-        tournois_info = {
+        tournament_info = {
             "id": self.id,
             "name": self.name,
             "city": self.city,
@@ -117,10 +117,10 @@ class Tournament():
             "total_round": self.total_round,
             "players": [p.to_dict() for p in self.players],
             "description": self.description,
-            "actual_round": self.actual_round,
+            "current_round": self.current_round,
             "finish": self.finish
         }
-        return tournois_info
+        return tournament_info
 
     @classmethod
     def from_dict(cls, data):
@@ -137,7 +137,7 @@ class Tournament():
             total_round=data["total_round"],
             players=players_objects,
             description=data["description"],
-            actual_round=data["actual_round"],
+            current_round=data["current_round"],
             finish=data["finish"]
         )
 
@@ -180,7 +180,7 @@ class Tournament():
         return cls.from_dict(data)
 
     @classmethod
-    def get_all_tournement(cls):
+    def get_all_tournements(cls):
         all_tournament_data_dict = []
         # Get all the tournament Id
         tournaments_name_list = Tournament.get_tournaments_id_list()
