@@ -162,7 +162,7 @@ class TournamentView():
             "Tournaments Menu - Select an option:",
             choices=[
                 Choice("Create Tournament ➕", value="1"),
-                Choice("Start Tournament 🚀", value="2"),
+                Choice("Start / Continue Tournament 🚀", value="2"),
                 Choice("Update Tournament 🛠️", value="3"),
                 Choice("View Tournament Detail 👁️", value="4"),
                 Choice("View All Tournaments 📋", value="5"),
@@ -246,13 +246,15 @@ class TournamentView():
             print(tabulate(table_data, headers="keys", tablefmt="fancy_grid"))
 
     @staticmethod
-    def display_tournament_info(tournament):
+    def display_tournament_info(tournament, standings=None):
         MainView.clean_console()
         print("\n--- TOURNAMENT DETAILS ---")
 
+        # Tabulate for general data
         general_data = [
             ["Name", tournament.name],
             ["City", tournament.city],
+            ["Round", f"{tournament.actual_round} / {tournament.total_round}"],
             ["Start Date", tournament.start_date],
             ["End Date", tournament.end_date],
             ["Total Rounds", tournament.total_round],
@@ -262,6 +264,20 @@ class TournamentView():
 
         print(tabulate(general_data, tablefmt="fancy_grid"))
 
+        # Tabulate for current standings
+        if standings:
+            print(f"\n📈 CURRENT STANDINGS (Round {tournament.actual_round})")
+            table_data = []
+            for i, player in enumerate(standings):
+                full_name = f"{player['surname']} {player['name']}"
+                score = player['score']
+                rank = i + 1
+                table_data.append([rank, full_name, score])
+
+            headers = ["Rank", "Player", "Score"]
+            print(tabulate(table_data, headers=headers, tablefmt="fancy_grid"))
+
+        # Tabulate for registred players
         len_players = len(tournament.players)
         print(f"\n -- REGISTERED PLAYERS ({len_players}) ---")
 

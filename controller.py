@@ -231,10 +231,14 @@ class TournamentController():
                     return
                 continue
 
-            if len(s_players) < 2:
-                MainView.error(f"Only {len(s_players)} player. Minimum: 2.")
-                print("Please try again.")
-                time.sleep(1.5)
+            # ratio round / players (nb_players = nb_rounds + 1)
+            nb_rounds = tournament_data["total_round"]
+            nb_players = len(s_players)
+
+            if nb_players < nb_rounds + 1:
+                MainView.error(f"min {nb_rounds + 1}.")
+                print("👉 Add more players.")
+                time.sleep(2)
                 continue
 
             break
@@ -267,6 +271,17 @@ class TournamentController():
 
         players = self.manage_tournament_players(tournament.players)
 
+        new_total_rounds = update_info["total_round"]
+        new_total_players = len(players)
+
+        if new_total_players < new_total_rounds + 1:
+            MainView.clean_console()
+            MainView.error("🚫 UPDATE ERROR")
+            MainView.error("Min {new_total_rounds + 1} players")
+            MainView.error("Restart")
+            time.sleep(3)
+            return
+
         try:
             Tournament.update_tournament(tournament.id, update_info, players)
             MainView.success("Tournament updated successfully!")
@@ -284,6 +299,13 @@ class TournamentController():
         elif target_tournament == "None":
             return
 
+        # Try to get actual standings
+        try:
+            current_standings = Tournament.current_standings(target_tournament.id)
+        except FileNotFoundError:
+            current_standings = []
+
+        # Sorted player list
         player_list = sorted(
             target_tournament.players, key=lambda x: x.surname, reverse=False
             )
@@ -291,7 +313,7 @@ class TournamentController():
         target_tournament.players = player_list
 
         MainView.clean_console()
-        TournamentView.display_tournament_info(target_tournament)
+        TournamentView.display_tournament_info(target_tournament, current_standings)
         return target_tournament
 
     def view_all_tournaments(self):
@@ -411,7 +433,8 @@ class TournamentController():
         tournament = TournamentController.select_tournament(
             filter_condition=lambda x: x.finish is False
             )
-        if not tournament:
+        # choice return value="None"
+        if not tournament or tournament == "None":
             return
 
         Tournament.initialize_standings(tournament.id)
