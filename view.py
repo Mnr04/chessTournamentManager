@@ -2,48 +2,49 @@ from tabulate import tabulate
 import datetime
 import re
 import questionary
+import os
 from questionary import Choice, Separator
-from rich.console import Console
-from rich.panel import Panel
-from rich.text import Text
-
-console = Console()
 
 class CancelAction(Exception):
     pass
 
+
 class MainView:
     @staticmethod
     def welcome_message():
-        console.print(Panel.fit("♟️  Chess Manager",  style="bold blue"))
+        print("\n" + "*" * 30)
+        print("CHESS MANAGER".center(30))
+        print("*" * 30 + "\n")
 
     @staticmethod
     def finish_message():
-        print("--- See you next time ---")
+        print("--- À la prochaine ! ---")
 
     @staticmethod
     def error(message):
-        console.print(f"❌ [bold red]{message}[/bold red]")
+        print(f"\n❌ ERREUR : {message}")
 
     @staticmethod
     def success(message):
-
-        console.print(f"✅ [bold green]{message}[/bold green]")
+        print(f"\n✅ SUCCÈS : {message}")
 
     @staticmethod
     def clean_console():
-        console.clear()
+        if os.name == 'nt':
+            os.system('cls')
+        else:
+            os.system('clear')
 
     @staticmethod
     def display_menu():
         choice = questionary.select(
-            "Select an option:",
+            "Main Menu - Select an option:",
             choices=[
-                Choice("Players 👤", value="1"),
-                Choice("Tournaments 🏆", value="2"),
-                Choice("Reports 📖", value="3"),
-                questionary.Separator(),
-                Choice("Quit ❌", value="4")
+                Choice("Player Management", value="1"),
+                Choice("Tournament Management", value="2"),
+                Choice("Reports", value="3"),
+                Separator(),
+                Choice("Quit", value="4")
             ]
         ).ask()
         return choice

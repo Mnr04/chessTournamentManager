@@ -1,4 +1,4 @@
-import shortuuid
+import uuid
 import shutil
 import random
 from database import JsonManager
@@ -15,7 +15,7 @@ class Player():
         self.name = name
         self.birth_date = birth_date
         self.ine = ine
-        self.id = id if id else shortuuid.uuid()
+        self.id = id if id else str(uuid.uuid4())
 
     def to_dict(self):
         return {
@@ -96,7 +96,7 @@ class Tournament():
         self, name, city, total_round, players, description, start_date,
         end_date, current_round=0, finish=False, id=None
     ):
-        self.id = id if id else shortuuid.uuid()
+        self.id = id if id else str(uuid.uuid4())
         self.name = name
         self.city = city
         self.current_round = current_round

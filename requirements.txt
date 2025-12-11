@@ -10,7 +10,5 @@ pycodestyle==2.14.0
 pyflakes==3.4.0
 Pygments==2.19.2
 questionary==2.1.1
-rich==14.2.0
-shortuuid==1.0.13
 tabulate==0.9.0
 wcwidth==0.2.14
