@@ -43,9 +43,9 @@ source env/bin/activate
 ```bash
 pip install -r requirements.txt
 ```
-## 🚀 Launch the program 
+## 🚀 Launch the program
 ```bash
-python main.py
+python3 main.py
 ```
 ### ➤ Navigation
 

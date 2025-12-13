@@ -261,7 +261,7 @@ class TournamentView():
         general_data = [
             ["Name", tournament.name],
             ["City", tournament.city],
-            ["Round", f"{tournament.current_round} / {tournament.total_round}"],
+            ["Round", f"{tournament.current_round} /{tournament.total_round}"],
             ["Start Date", tournament.start_date],
             ["End Date", tournament.end_date],
             ["Total Rounds", tournament.total_round],
@@ -383,7 +383,7 @@ class TournamentView():
         min_required = total_round + 1
 
         return questionary.checkbox(
-            f"Select players (Min {min_required} required for {total_round} rounds):",
+            f"Select players (Min {min_required} required):",
             choices=choices,
             instruction="(Space to select, Enter to confirm)"
         ).ask()
