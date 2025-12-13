@@ -67,5 +67,5 @@ Ensure you are at the root of the project.
 
 Run the following command:
 ```bash
-flake8 --format=html --htmldir=flake-report
+flake8 --exclude=env,venv,.git,__pycache__,flake8_rapport --max-line-length=119 --format=html --htmldir=flake8_rapport
 ```
