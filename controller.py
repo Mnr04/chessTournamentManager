@@ -307,7 +307,7 @@ class TournamentController():
             if new_total_players < new_total_rounds + 1:
                 self.main_view.clean_console()
                 self.main_view.error("🚫 UPDATE ERROR")
-                self.main_view.error("Min {new_total_rounds + 1} players")
+                self.main_view.error(f"Min {new_total_rounds + 1} players")
                 self.main_view.error("Restart")
                 self.main_view.prompt_continue()
                 return
@@ -362,8 +362,10 @@ class TournamentController():
 
     def remove_tournament(self):
         tournament_target = self.select_tournament()
-        if not tournament_target:
-            self.main_view.error("Tournament not find")
+
+        if not tournament_target or tournament_target == "None":
+            self.main_view.display_return("🔙 Back to menu")
+            return
 
         self.main_view.display_success_and_refresh(
             f"{tournament_target.name} successfully deleted"
@@ -743,7 +745,7 @@ class ReportController:
         self.main_view.clean_console()
 
         target_tournament = self.tournament_controller.select_tournament()
-        if not target_tournament:
+        if not target_tournament or target_tournament == "None":
             return
 
         player_list_sorted = sorted(
@@ -762,7 +764,8 @@ class ReportController:
         target_tournament = self.tournament_controller.select_tournament(
             filter_condition=lambda x: x.finish
             )
-        if not target_tournament:
+
+        if not target_tournament or target_tournament == "None":
             return
 
         rounds_data = Round.tournament_summary(target_tournament.id)

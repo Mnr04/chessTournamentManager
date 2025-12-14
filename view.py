@@ -38,6 +38,7 @@ class MainView:
     def prompt_continue(self):
         input("\nPress Enter to continue...")
 
+
     def display_menu(self):
         choice = questionary.select(
             "Main Menu - Select an option:",
