@@ -608,6 +608,7 @@ class InputView:
             if not ine_input:
                 if default is not None:
                     return default
+            # 2 letters followed by 5 digits
             elif re.match(r"^[A-Z]{2}[0-9]{5}$", ine_input):
                 return ine_input
             else:

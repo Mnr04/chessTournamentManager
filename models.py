@@ -326,11 +326,13 @@ class Round:
             id = player['id']
             score = player['score']
 
+            # Retrieve fresh player info from Json
             player_obj = Player.get_players_by_id(id)
 
             if player_obj is None:
                 continue
 
+            # Add the current score to the player object for sorting
             player_obj.score = score
 
             players_list.append(player_obj)
@@ -348,13 +350,15 @@ class Round:
 
         standing = JsonManager.load_data(file_path)
 
+        # Find the player in the list and update their score
         for p in standing:
             if p["id"] == player_id:
                 p["score"] += points_to_add
                 break
 
-        # Sort ranking
+        # Sort the ranking
         standing = sorted(standing, key=lambda x: x['score'], reverse=True)
+
         # Save the data
         JsonManager.save_data(file_path, standing)
 
@@ -372,16 +376,22 @@ class Round:
     @staticmethod
     def tournament_summary(tournament_id):
         tournament_dir = Path("data") / "tournament" / tournament_id
+
+        # Check if directory exists
         if tournament_dir.exists():
+            # Get all rounds folders
             round_folders = [x for x in tournament_dir.iterdir() if x.is_dir()]
         else:
             return []
 
+        # Sort folders to keep Round 1, Round 2 ... in order
         round_folders.sort()
         all_rounds_data = []
 
         for folder in round_folders:
             target_file = folder / "Match.json"
+
+            # If the round has matches saved, load them
             if target_file.exists():
                 data = JsonManager.load_data(target_file)
                 match_list = data.get("matches", [])

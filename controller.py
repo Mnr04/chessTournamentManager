@@ -256,6 +256,7 @@ class TournamentController():
                 nb_rounds = tournament_data["total_round"]
                 nb_players = len(s_players)
 
+                # Check if we have enough players for the number of rounds
                 if nb_players < nb_rounds + 1:
                     self.main_view.error(f"min {nb_rounds + 1}.")
                     self.main_view.error("👉 Add more players.")
@@ -423,8 +424,10 @@ class TournamentController():
             action = self.view.display_manage_menu()
 
             if action == "add":
-
+                # Get id for players already in the tournament
                 current_ids = {p.id for p in actual_players}
+
+                # Keep only players who are not in the tournament
                 candidates = [
                     p for p in all_players if p.id not in current_ids
                     ]
@@ -446,6 +449,7 @@ class TournamentController():
                 self.main_view.clean_console()
 
             elif action == "confirm":
+                # Verify we have enough players for the rounds
                 if len(actual_players) < total_round + 1:
                     self.main_view.error(f"Min : {total_round + 1} players.")
                     continue
@@ -536,6 +540,7 @@ class RoundController:
 
         file_path = f"data/tournament/{tournament.id}/{round_name}/Match.json"
 
+        # Check if the round file already exists
         if os.path.exists(file_path):
             data = JsonManager.load_data(file_path)
             new_round = Round.from_dict(data)
@@ -546,16 +551,20 @@ class RoundController:
             start_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
             new_round = Round(round_name, start_time)
 
+            # Get players list with their current scores
             players_list = Round.get_round_players_list(tournament.id)
             random.shuffle(players_list)
 
+            # Sort players by score
             s_players_list = sorted(
                 players_list, key=lambda p: p.score, reverse=True
                 )
 
             match_history = Round.get_all_pairs_played(tournament.id)
 
-            new_round.matches = cls.generate_pairs(s_players_list, match_history)
+            new_round.matches = cls.generate_pairs(
+                s_players_list, match_history
+                )
 
             new_round.save_round(tournament.id)
 
@@ -589,29 +598,36 @@ class RoundController:
         """
         match_list = []
 
+        # Handle odd number of players
         if len(players_list_sorted) % 2 != 0:
             exit_player = players_list_sorted.pop()
             match_exit = Match(
                 player1=exit_player, player2=None, score1=1, score2=0)
             match_list.append(match_exit)
 
+        # Pair players
         while len(players_list_sorted) > 0:
             p1 = players_list_sorted.pop(0)
             match_found = False
 
+            # Loop to find players Vs
             for i in range(len(players_list_sorted)):
                 possible_opponent = players_list_sorted[i]
 
+                # Check history to avoid duplicate matches
                 if not TournamentController.has_already_played(
                     p1.id, possible_opponent.id, match_history
                 ):
+                    # Valid opponent found
                     p2 = players_list_sorted.pop(i)
 
+                    # Create the match object
                     new_match = Match(player1=p1, player2=p2)
                     match_list.append(new_match)
                     match_found = True
                     break
 
+            # Force match with the next available player
             if not match_found:
                 p2 = players_list_sorted.pop(0)
                 new_match = Match(player1=p1, player2=p2)
@@ -678,6 +694,7 @@ class MatchController:
             score2 = item["p2"]
 
             if m.player2:
+                # 1 point for winner, 0 for loser, 0.5 for draw
                 if score1 > score2:
                     Round.update_standing(tournament_id, m.player1.id, 1)
                 elif score1 < score2:
