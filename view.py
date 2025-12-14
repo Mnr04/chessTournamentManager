@@ -38,7 +38,6 @@ class MainView:
     def prompt_continue(self):
         input("\nPress Enter to continue...")
 
-
     def display_menu(self):
         choice = questionary.select(
             "Main Menu - Select an option:",
@@ -64,7 +63,10 @@ class MainView:
         print(f"\n---  CURRENT PLAYERS ({nb_players}) ---")
 
     def prompt_cancel_creation(self):
-        response = input("No players selected. Cancel creation? (y/n): ").strip().lower()
+        response = input(
+            "No players selected. Cancel creation? (y/n): "
+            ).strip().lower()
+
         return response == 'y'
 
     def display_return(self, message):
