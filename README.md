@@ -25,7 +25,7 @@ Follow these steps to set up the development environment:
 ### 1. Clone the repository
 Clone the GitHub repository or download the source files.
 ```bash
-git clone https://github.com/Mnr04/chess_tournament_manager.git
+git clone https://github.com/Mnr04/chessTournamentManager.git
 ```
 ### 2. Create a virtual environment
 
