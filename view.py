@@ -1,7 +1,6 @@
 from tabulate import tabulate
 import datetime
 import re
-import questionary
 import os
 from questionary import Choice, Separator
 
